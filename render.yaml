@@ -17,7 +17,7 @@ services:
         value: stderr
       - key: DB_CONNECTION
         value: pgsql
-      - key: DATABASE_URL
+      - key: DB_URL
         fromDatabase:
           name: ambulancias-db
           property: connectionString

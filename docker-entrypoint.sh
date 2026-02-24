@@ -3,12 +3,12 @@ set -e
 
 # Run migrations
 echo "Running migrations..."
-php artisan migrate --force
+php artisan migrate --force --no-interaction
 
 # Optimize Filament
 echo "Optimizing Filament..."
-php artisan filament:upgrade
-php artisan filament:optimize
+php artisan filament:upgrade --no-interaction
+php artisan filament:optimize --no-interaction
 
 # Clear and cache config/routes/views
 echo "Caching configuration..."
