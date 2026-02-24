@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+@theme {
+    --font-sans: 'Outfit', sans-serif;
+}
+
+/* Custom Typography & UI Enhancements */
+body {
+    font-family: 'Outfit', sans-serif;
+}
+
+.fi-sidebar-header {
+    @apply border-b border-gray-200 dark:border-gray-800;
+}
+
+.fi-sidebar-nav-groups {
+    @apply gap-y-2;
+}
+
+.fi-sidebar-item-button {
+    @apply rounded-lg transition-colors duration-200;
+}
+
+.fi-header-heading {
+    @apply font-bold tracking-tight;
+}
+
+.fi-btn {
+    @apply font-medium tracking-wide shadow-sm hover:shadow-md transition-all duration-200;
+}
+
+.fi-card {
+    @apply shadow-lg border border-gray-100 dark:border-gray-800 rounded-xl;
+}

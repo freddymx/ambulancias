@@ -15,11 +15,41 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Super Admin
+        User::factory()->create([
+            'name' => 'Alfredo Pineda',
+            'email' => 'info@alfredopineda.es',
+            'password' => 'password',
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $this->call([
+            GestorSeeder::class,
+        ]);
+
+        // Sample Nurses
+        User::factory()->create([
+            'name' => 'Nurse One',
+            'email' => 'nurse1@example.com',
+            'role' => 'nurse',
+            'is_active' => true,
+            'monthly_shift_limit' => 10,
+        ]);
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Nurse Two',
+            'email' => 'nurse2@example.com',
+            'role' => 'nurse',
+            'is_active' => true,
+            'monthly_shift_limit' => 12,
+        ]);
+        
+        // Create some random nurses
+        User::factory(5)->create([
+            'role' => 'nurse',
+            'is_active' => true,
+            'monthly_shift_limit' => 8,
         ]);
     }
 }
