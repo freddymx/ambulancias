@@ -1,11 +1,9 @@
 services:
   - type: web
     name: ambulancias
-    env: php
+    env: docker
     plan: free
     region: oregon
-    buildCommand: composer install --no-dev --optimize-autoloader && npm install && npm run build
-    startCommand: php artisan migrate --force && php artisan filament:upgrade && php artisan filament:optimize && heroku-php-nginx public/
     envVars:
       - key: APP_KEY
         generateValue: true
