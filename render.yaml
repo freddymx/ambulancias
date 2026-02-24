@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: ambulancias
+    env: php
+    plan: free
+    region: oregon
+    buildCommand: composer install --no-dev --optimize-autoloader && npm install && npm run build
+    startCommand: php artisan migrate --force && php artisan filament:upgrade && php artisan filament:optimize && heroku-php-nginx public/
+    envVars:
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        sync: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ambulancias-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+
+databases:
+  - name: ambulancias-db
+    databaseName: ambulancias
+    user: ambulancias
+    plan: free
+    region: oregon
