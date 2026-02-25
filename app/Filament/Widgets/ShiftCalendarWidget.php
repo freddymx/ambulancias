@@ -79,15 +79,15 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 return [
                     DatePicker::make('date')
-                        ->label('Fecha')
+                        ->label(__('app.shifts.date'))
                         ->required()
                         ->readOnly(),
                     Checkbox::make('is_reserve')
-                        ->label('Reserva')
+                        ->label(__('app.shifts.reserve'))
                         ->disabled(! $isAdminOrGestor)
                         ->dehydrated($isAdminOrGestor),
                     \Filament\Forms\Components\Select::make('status')
-                        ->label('Estado')
+                        ->label(__('app.shifts.status'))
                         ->options(ShiftStatus::class)
                         ->required()
                         ->disabled(! $isAdminOrGestor)
@@ -118,7 +118,7 @@ class ShiftCalendarWidget extends CalendarWidget
                 // Approve and Reject buttons for Admin/Gestor (only for Pending shifts)
                 if ($isAdminOrGestor && $record->status === ShiftStatus::Pending) {
                     $actions[] = \Filament\Actions\Action::make('approve')
-                        ->label('Aprobar')
+                        ->label(__('app.shifts.approve'))
                         ->color('success')
                         ->icon('heroicon-o-check-circle')
                         ->requiresConfirmation()
@@ -127,7 +127,7 @@ class ShiftCalendarWidget extends CalendarWidget
                             $this->refreshRecords();
 
                             Notification::make()
-                                ->title('Turno aprobado')
+                                ->title(__('app.shifts.approved'))
                                 ->success()
                                 ->send();
                         })
@@ -136,7 +136,7 @@ class ShiftCalendarWidget extends CalendarWidget
                         });
 
                     $actions[] = \Filament\Actions\Action::make('reject')
-                        ->label('Rechazar')
+                        ->label(__('app.shifts.reject'))
                         ->color('danger')
                         ->icon('heroicon-o-x-circle')
                         ->requiresConfirmation()
@@ -145,7 +145,7 @@ class ShiftCalendarWidget extends CalendarWidget
                             $this->refreshRecords();
 
                             Notification::make()
-                                ->title('Turno rechazado')
+                                ->title(__('app.shifts.rejected'))
                                 ->success()
                                 ->send();
                         })
@@ -161,7 +161,7 @@ class ShiftCalendarWidget extends CalendarWidget
                             $action->getRecord()->delete();
 
                             Notification::make()
-                                ->title('Solicitud eliminada')
+                                ->title(__('app.shifts.removed'))
                                 ->success()
                                 ->send();
 
@@ -173,7 +173,7 @@ class ShiftCalendarWidget extends CalendarWidget
                 // If admin/gestor, add standard save button
                 if ($isAdminOrGestor) {
                     $actions[] = \Filament\Actions\Action::make('save')
-                        ->label('Guardar')
+                        ->label(__('app.shifts.save'))
                         ->color('primary')
                         ->action(function (array $data) use ($action) {
                             $action->getRecord()->update($data);
@@ -181,7 +181,7 @@ class ShiftCalendarWidget extends CalendarWidget
                             $action->cancel();
 
                             Notification::make()
-                                ->title('Turno actualizado')
+                                ->title(__('app.shifts.updated'))
                                 ->success()
                                 ->send();
                         });
@@ -265,13 +265,13 @@ class ShiftCalendarWidget extends CalendarWidget
             })
             ->form([
                 DatePicker::make('date')
-                    ->label('Fecha')
+                    ->label(__('app.shifts.date'))
                     ->required()
                     ->readOnly(),
 
                 Checkbox::make('is_reserve')
-                    ->label('Solicitar como Reserva')
-                    ->helperText(fn ($get) => $get('must_be_reserve') ? 'El día está completo. Solo puedes solicitar reserva.' : 'Marca esta casilla si deseas ser reserva.')
+                    ->label(__('app.shifts.request_as_reserve'))
+                    ->helperText(fn ($get) => $get('must_be_reserve') ? __('app.shifts.day_full') : __('app.shifts.check_reserve'))
                     ->disabled(fn ($get) => $get('must_be_reserve'))
                     ->dehydrated()
                     ->default(false),
@@ -293,8 +293,8 @@ class ShiftCalendarWidget extends CalendarWidget
                 ) {
 
                     Notification::make()
-                        ->title('Error')
-                        ->body('Ya tienes una solicitud o turno asignado para este día.')
+                        ->title(__('app.shifts.error'))
+                        ->body(__('app.shifts.already_assigned'))
                         ->danger()
                         ->send();
 
@@ -316,8 +316,8 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 if ($user->monthly_shift_limit && $shiftsThisMonth >= $user->monthly_shift_limit) {
                     Notification::make()
-                        ->title('Límite Mensual Alcanzado')
-                        ->body("Has alcanzado tu límite de {$user->monthly_shift_limit} solicitudes/turnos para este mes.")
+                        ->title(__('app.shifts.monthly_limit_reached'))
+                        ->body(__('app.shifts.monthly_limit_reached', ['limit' => $user->monthly_shift_limit]))
                         ->danger()
                         ->send();
 
@@ -332,8 +332,8 @@ class ShiftCalendarWidget extends CalendarWidget
                 ]);
 
                 Notification::make()
-                    ->title('Solicitud Enviada')
-                    ->body('Tu solicitud ha sido registrada y está pendiente de aprobación.')
+                    ->title(__('app.shifts.sent'))
+                    ->body(__('app.shifts.pending_approval'))
                     ->success()
                     ->send();
             });

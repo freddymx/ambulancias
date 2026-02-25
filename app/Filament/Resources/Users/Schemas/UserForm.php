@@ -17,7 +17,7 @@ class UserForm
                     ->required()
                     ->maxLength(255),
                 TextInput::make('email')
-                    ->label('Email address')
+                    ->label(__('app.users.email'))
                     ->email()
                     ->required()
                     ->maxLength(255)
@@ -26,13 +26,14 @@ class UserForm
                     ->options(function () {
                         if (auth()->check() && auth()->user()->role === 'gestor') {
                             return [
-                                'nurse' => 'Nurse',
+                                'nurse' => __('app.shifts.nurse'),
                             ];
                         }
+
                         return [
-                            'admin' => 'Administrator',
-                            'gestor' => 'Gestor',
-                            'nurse' => 'Nurse',
+                            'admin' => __('filament-support::actions/manage.administrator'),
+                            'gestor' => __('app.shifts.gestor'),
+                            'nurse' => __('app.shifts.nurse'),
                         ];
                     })
                     ->live()
@@ -40,10 +41,10 @@ class UserForm
                     ->default('nurse'),
                 TextInput::make('password')
                     ->password()
-                    ->dehydrated(fn($state) => filled($state))
-                    ->required(fn(string $context): bool => $context === 'create'),
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->required(fn (string $context): bool => $context === 'create'),
                 Toggle::make('is_active')
-                    ->label('Approved / Active')
+                    ->label(__('app.users.approved_active'))
                     ->required(),
                 TextInput::make('monthly_shift_limit')
                     ->numeric()
@@ -52,11 +53,11 @@ class UserForm
                 TextInput::make('phone')
                     ->tel()
                     ->maxLength(255),
-                TextInput::make('identifier')
-                    ->label('ID')
+                TextInput::make('dni')
+                    ->label(__('app.users.dni'))
                     ->unique(ignoreRecord: true)
-                    ->required(fn(callable $get) => $get('role') === 'nurse')
-                    ->visible(fn(callable $get) => $get('role') === 'nurse' || !$get('role')),
+                    ->required(fn (callable $get) => $get('role') === 'nurse')
+                    ->visible(fn (callable $get) => $get('role') === 'nurse' || ! $get('role')),
             ]);
     }
 }

@@ -25,7 +25,7 @@ class User extends Authenticatable
         'is_active',
         'monthly_shift_limit',
         'phone',
-        'identifier',
+        'dni',
     ];
 
     public function shifts()

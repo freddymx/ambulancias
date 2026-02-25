@@ -19,13 +19,13 @@ class UsersTable
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label('Email address')
+                    ->label(__('app.users.email'))
                     ->searchable(),
                 TextColumn::make('phone')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('identifier')
-                    ->label('ID Code')
+                TextColumn::make('dni')
+                    ->label(__('app.users.dni'))
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('role')
@@ -39,12 +39,12 @@ class UsersTable
                     ->searchable(),
                 IconColumn::make('is_active')
                     ->boolean()
-                    ->label('Active')
+                    ->label(__('app.users.active'))
                     ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                 TextColumn::make('monthly_shift_limit')
                     ->numeric()
                     ->sortable()
-                    ->label('Monthly Limit'),
+                    ->label(__('app.users.monthly_limit')),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -56,7 +56,7 @@ class UsersTable
             ->actions([
                 EditAction::make(),
                 Action::make('activate')
-                    ->label('Activar')
+                    ->label(__('app.users.activate'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn ($record) => ! $record->is_active)
@@ -65,7 +65,7 @@ class UsersTable
                         $record->update(['is_active' => true]);
                     }),
                 Action::make('deactivate')
-                    ->label('Desactivar')
+                    ->label(__('app.users.deactivate'))
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn ($record) => $record->is_active && $record->role !== 'admin')

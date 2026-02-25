@@ -19,20 +19,25 @@ class AmbulanceShiftsTable
         return $table
             ->columns([
                 TextColumn::make('user.name')
-                    ->label('Nurse')
+                    ->label(__('app.shifts.nurse'))
                     ->sortable(),
                 TextColumn::make('date')
+                    ->label(__('app.shifts.date'))
                     ->date()
                     ->sortable(),
                 TextColumn::make('status')
+                    ->label(__('app.shifts.status'))
                     ->badge(),
                 IconColumn::make('is_reserve')
+                    ->label(__('app.shifts.reserve'))
                     ->boolean(),
                 TextColumn::make('created_at')
+                    ->label(__('app.shifts.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label(__('app.shifts.updated_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -44,7 +49,7 @@ class AmbulanceShiftsTable
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('approve')
-                    ->label('Aprobar')
+                    ->label(__('app.shifts.approve'))
                     ->icon('heroicon-o-check')
                     ->color('success')
                     ->visible(fn ($record) => $record->status === ShiftStatus::Pending)
@@ -53,7 +58,7 @@ class AmbulanceShiftsTable
                         $record->update(['status' => ShiftStatus::Accepted]);
                     }),
                 Action::make('reject')
-                    ->label('Rechazar')
+                    ->label(__('app.shifts.reject'))
                     ->icon('heroicon-o-x-mark')
                     ->color('danger')
                     ->visible(fn ($record) => $record->status === ShiftStatus::Pending)

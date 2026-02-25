@@ -25,21 +25,21 @@ class AmbulanceShiftStatusChanged extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $message = $this->status === ShiftStatus::Accepted->value
-            ? "¡Tu turno de ambulancia ha sido confirmado para el {$this->date}!"
-            : "Lo sentimos, tu solicitud de turno para el {$this->date} ha sido rechazada.";
+            ? __('app.notifications.shift_accepted_mail', ['date' => $this->date])
+            : __('app.notifications.shift_rejected_mail', ['date' => $this->date]);
 
         return (new MailMessage)
-            ->subject('Estado de tu turno de ambulancia')
+            ->subject(__('app.notifications.shift_status_subject'))
             ->line($message);
     }
 
     public function toDatabase(object $notifiable): array
     {
         return [
-            'title' => 'Estado de turno actualizado',
+            'title' => __('app.notifications.shift_status_title'),
             'message' => $this->status === ShiftStatus::Accepted->value
-                ? "Tu turno para el {$this->date} ha sido confirmado"
-                : "Tu solicitud para el {$this->date} ha sido rechazada",
+                ? __('app.notifications.shift_accepted_message', ['date' => $this->date])
+                : __('app.notifications.shift_rejected_message', ['date' => $this->date]),
         ];
     }
 }

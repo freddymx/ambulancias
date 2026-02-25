@@ -24,23 +24,23 @@ class NewUserRegisteredNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Nueva solicitud de registro')
-            ->greeting('Hola '.$notifiable->name)
-            ->line('Un nuevo usuario ha solicitado acceso al sistema.')
-            ->line('**Datos del usuario:**')
-            ->line('- Nombre: '.$this->newUser->name)
-            ->line('- Email: '.$this->newUser->email)
-            ->line('- Teléfono: '.($this->newUser->phone ?? 'No proporcionado'))
-            ->line('- ID: '.($this->newUser->identifier ?? 'No proporcionado'))
-            ->action('Revisar usuario', route('filament.admin.resources.users.index'))
-            ->line('Por favor, revisa la solicitud y activa la cuenta si es apropiada.');
+            ->subject(__('app.notifications.new_user_title'))
+            ->greeting(__('filament-support::actions/greetings.hello', ['name' => $notifiable->name]))
+            ->line(__('app.notifications.new_user_line1'))
+            ->line('**'.__('app.notifications.user_data').'**')
+            ->line('- '.__('validation.attributes.name').': '.$this->newUser->name)
+            ->line('- '.__('app.users.email').': '.$this->newUser->email)
+            ->line('- '.__('validation.attributes.phone').': '.($this->newUser->phone ?? __('app.notifications.not_provided')))
+            ->line('- '.__('app.users.dni').': '.($this->newUser->dni ?? __('app.notifications.not_provided')))
+            ->action(__('app.notifications.review_user'), route('filament.admin.resources.users.index'))
+            ->line(__('app.notifications.review_request'));
     }
 
     public function toDatabase(object $notifiable): array
     {
         return [
-            'title' => 'Nueva solicitud de registro',
-            'message' => $this->newUser->name.' ('.$this->newUser->email.') ha solicitado acceso al sistema.',
+            'title' => __('app.notifications.new_user_title'),
+            'message' => __('app.notifications.new_user_message', ['name' => $this->newUser->name, 'email' => $this->newUser->email]),
             'link' => route('filament.admin.resources.users.index'),
         ];
     }

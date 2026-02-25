@@ -13,8 +13,8 @@ class Login extends BaseLogin
 
         if ($this->getPendingApproval()) {
             Notification::make()
-                ->title('Cuenta pendiente de revisión')
-                ->body('Tu cuenta está a la espera de aprobación por un supervisor. Te notificaremos cuando sea activada.')
+                ->title(__('app.auth.login.pending_approval_title'))
+                ->body(__('app.auth.login.pending_approval_body'))
                 ->warning()
                 ->persistent()
                 ->send();

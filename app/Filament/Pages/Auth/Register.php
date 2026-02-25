@@ -21,9 +21,9 @@ class Register extends BaseRegister
                 TextInput::make('phone')
                     ->tel()
                     ->maxLength(255),
-                TextInput::make('identifier')
-                    ->label('ID')
-                    ->unique('users', 'identifier')
+                TextInput::make('dni')
+                    ->label(__('app.users.dni'))
+                    ->unique('users', 'dni')
                     ->required(),
                 $this->getPasswordFormComponent(),
                 $this->getPasswordConfirmationFormComponent(),
@@ -43,8 +43,8 @@ class Register extends BaseRegister
         $user = $this->getUser();
 
         Notification::make()
-            ->title('Registro completado')
-            ->body('Tu cuenta está pendiente de aprobación. Te notificaremos cuando sea activada.')
+            ->title(__('app.auth.register.completed_title'))
+            ->body(__('app.auth.register.completed_body'))
             ->success()
             ->send();
 

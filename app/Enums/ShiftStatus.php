@@ -6,7 +6,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum ShiftStatus: string implements HasLabel, HasColor, HasIcon
+enum ShiftStatus: string implements HasColor, HasIcon, HasLabel
 {
     case Pending = 'pending';
     case Accepted = 'accepted';
@@ -15,13 +15,13 @@ enum ShiftStatus: string implements HasLabel, HasColor, HasIcon
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::Pending => 'Pendiente',
-            self::Accepted => 'Aceptado',
-            self::Rejected => 'Rechazado',
+            self::Pending => __('app.shifts.status_pending'),
+            self::Accepted => __('app.shifts.status_accepted'),
+            self::Rejected => __('app.shifts.status_rejected'),
         };
     }
 
-    public function getColor(): string | array | null
+    public function getColor(): string|array|null
     {
         return match ($this) {
             self::Pending => 'warning',
