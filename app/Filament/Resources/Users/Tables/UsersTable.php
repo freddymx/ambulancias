@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -29,7 +30,7 @@ class UsersTable
                     ->toggleable(),
                 TextColumn::make('role')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'admin' => 'danger',
                         'gestor' => 'warning',
                         'nurse' => 'info',
@@ -38,7 +39,8 @@ class UsersTable
                     ->searchable(),
                 IconColumn::make('is_active')
                     ->boolean()
-                    ->label('Approved'),
+                    ->label('Active')
+                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
                 TextColumn::make('monthly_shift_limit')
                     ->numeric()
                     ->sortable()
@@ -53,6 +55,24 @@ class UsersTable
             ])
             ->actions([
                 EditAction::make(),
+                Action::make('activate')
+                    ->label('Activar')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn ($record) => ! $record->is_active)
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update(['is_active' => true]);
+                    }),
+                Action::make('deactivate')
+                    ->label('Desactivar')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn ($record) => $record->is_active && $record->role !== 'admin')
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update(['is_active' => false]);
+                    }),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

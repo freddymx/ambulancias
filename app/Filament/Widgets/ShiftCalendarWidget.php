@@ -5,29 +5,27 @@ namespace App\Filament\Widgets;
 use App\Enums\ShiftStatus;
 use App\Models\AmbulanceShift;
 use Carbon\Carbon;
+use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Widgets\Widget;
-use Filament\Actions\DeleteAction;
 use Guava\Calendar\Filament\Actions\CreateAction;
 use Guava\Calendar\Filament\Actions\EditAction;
-use Guava\Calendar\ValueObjects\CalendarEvent;
 use Guava\Calendar\Filament\CalendarWidget;
+use Guava\Calendar\ValueObjects\CalendarEvent;
 use Guava\Calendar\ValueObjects\DateClickInfo;
 use Guava\Calendar\ValueObjects\EventClickInfo;
+use Guava\Calendar\ValueObjects\FetchInfo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Guava\Calendar\ValueObjects\FetchInfo;
-use Filament\Schemas\Schema;
 
 class ShiftCalendarWidget extends CalendarWidget
 {
     protected string $view = 'guava-calendar::widgets.calendar-widget';
+
     protected bool $dateClickEnabled = true;
+
     protected bool $eventClickEnabled = true;
 
     public function onDateClick(DateClickInfo $info): void
@@ -42,6 +40,7 @@ class ShiftCalendarWidget extends CalendarWidget
             $this->mountAction('edit', [
                 'record' => $existingShift,
             ]);
+
             return;
         }
 
@@ -54,11 +53,15 @@ class ShiftCalendarWidget extends CalendarWidget
 
     public function onEventClick(EventClickInfo $info, Model $record, ?string $action = null): void
     {
-        // Override parent logic to force edit action if it's the user's shift
-        if ($record instanceof AmbulanceShift && $record->user_id === Auth::id()) {
+        $user = Auth::user();
+        $isAdminOrGestor = in_array($user->role ?? '', ['admin', 'gestor']);
+
+        // Allow admin/gestor to edit any shift, or user to edit their own
+        if ($record instanceof AmbulanceShift && ($isAdminOrGestor || $record->user_id === Auth::id())) {
             $this->mountAction('edit', [
                 'record' => $record,
             ]);
+
             return;
         }
 
@@ -81,25 +84,30 @@ class ShiftCalendarWidget extends CalendarWidget
                         ->readOnly(),
                     Checkbox::make('is_reserve')
                         ->label('Reserva')
-                        ->disabled(!$isAdminOrGestor)
+                        ->disabled(! $isAdminOrGestor)
                         ->dehydrated($isAdminOrGestor),
                     \Filament\Forms\Components\Select::make('status')
                         ->label('Estado')
                         ->options(ShiftStatus::class)
                         ->required()
-                        ->disabled(!$isAdminOrGestor)
+                        ->disabled(! $isAdminOrGestor)
                         ->dehydrated($isAdminOrGestor),
                 ];
             })
             ->modalFooterActions(function (EditAction $action) {
                 $record = $action->getRecord();
                 $user = Auth::user();
+
+                if (! $record || ! $user) {
+                    return [$action->getModalCancelAction()];
+                }
+
                 $isAdminOrGestor = in_array($user->role, ['admin', 'gestor']);
-                
+
                 // User can delete their own pending/rejected shifts
                 $canDelete = $record && $record->user_id === $user->id &&
                     in_array($record->status, [ShiftStatus::Pending, ShiftStatus::Rejected]);
-                
+
                 // Admins/Gestors can delete any shift
                 if ($isAdminOrGestor) {
                     $canDelete = true;
@@ -107,21 +115,59 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 $actions = [];
 
+                // Approve and Reject buttons for Admin/Gestor (only for Pending shifts)
+                if ($isAdminOrGestor && $record->status === ShiftStatus::Pending) {
+                    $actions[] = \Filament\Actions\Action::make('approve')
+                        ->label('Aprobar')
+                        ->color('success')
+                        ->icon('heroicon-o-check-circle')
+                        ->requiresConfirmation()
+                        ->action(function () use ($record) {
+                            $record->update(['status' => ShiftStatus::Accepted]);
+                            $this->refreshRecords();
+
+                            Notification::make()
+                                ->title('Turno aprobado')
+                                ->success()
+                                ->send();
+                        })
+                        ->after(function () use ($action) {
+                            $action->cancel();
+                        });
+
+                    $actions[] = \Filament\Actions\Action::make('reject')
+                        ->label('Rechazar')
+                        ->color('danger')
+                        ->icon('heroicon-o-x-circle')
+                        ->requiresConfirmation()
+                        ->action(function () use ($record) {
+                            $record->update(['status' => ShiftStatus::Rejected]);
+                            $this->refreshRecords();
+
+                            Notification::make()
+                                ->title('Turno rechazado')
+                                ->success()
+                                ->send();
+                        })
+                        ->after(function () use ($action) {
+                            $action->cancel();
+                        });
+                }
+
                 if ($canDelete) {
                     $actions[] = DeleteAction::make('delete')
                         ->requiresConfirmation()
-                        ->action(function (DeleteAction $deleteAction) use ($action) {
+                        ->action(function () use ($action) {
                             $action->getRecord()->delete();
-                            
+
                             Notification::make()
                                 ->title('Solicitud eliminada')
                                 ->success()
                                 ->send();
-                                
-                            $this->refreshRecords(); 
+
+                            $this->refreshRecords();
                             $action->cancel();
-                        })
-                        ->after(fn () => $action->cancel()); // Ensure parent closes
+                        });
                 }
 
                 // If admin/gestor, add standard save button
@@ -133,7 +179,7 @@ class ShiftCalendarWidget extends CalendarWidget
                             $action->getRecord()->update($data);
                             $this->refreshRecords();
                             $action->cancel();
-                            
+
                             Notification::make()
                                 ->title('Turno actualizado')
                                 ->success()
@@ -147,7 +193,7 @@ class ShiftCalendarWidget extends CalendarWidget
             });
     }
 
-    public function getEvents(FetchInfo $fetchInfo): Collection | array
+    public function getEvents(FetchInfo $fetchInfo): Collection|array
     {
         return AmbulanceShift::query()
             ->with('user')
@@ -164,28 +210,37 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 // Status indicator in title if not accepted
                 if ($shift->status !== ShiftStatus::Accepted) {
-                    $title .= ' [' . $shift->status->getLabel() . ']';
+                    $title .= ' ['.$shift->status->getLabel().']';
                 }
 
                 $color = match ($shift->status) {
-                    ShiftStatus::Accepted => $shift->is_reserve ? '#fbbf24' : ($isMe ? '#3b82f6' : '#10b981'), // Amber (reserve), Blue (me), Green (others)
-                    ShiftStatus::Pending => '#9ca3af', // Gray/Zinc for pending
-                    ShiftStatus::Rejected => '#ef4444', // Red for rejected
-                    default => '#9ca3af',
+                    ShiftStatus::Accepted => match (true) {
+                        $shift->is_reserve => '#f59e0b',  // Amber for reserve
+                        $isMe => '#0ea5e9',               // Sky blue for me
+                        default => '#10b981',              // Emerald green for others
+                    },
+                    ShiftStatus::Pending => '#8b5cf6',      // Violet for pending
+                    ShiftStatus::Rejected => '#ef4444',    // Red for rejected
+                    default => '#8b5cf6',
                 };
 
-                // If rejected, maybe lighter color or strike-through style?
-                // For now, just red.
+                $textColor = match ($shift->status) {
+                    ShiftStatus::Accepted => '#ffffff',
+                    ShiftStatus::Pending => '#ffffff',
+                    ShiftStatus::Rejected => '#ffffff',
+                    default => '#ffffff',
+                };
 
                 return CalendarEvent::make($shift)
                     ->title($title)
                     ->start($shift->date)
                     ->end($shift->date)
-                    ->backgroundColor($color);
+                    ->backgroundColor($color)
+                    ->textColor($textColor);
             });
     }
 
-    public function createAction(string $model = null, ?string $name = null): CreateAction
+    public function createAction(?string $model = null, ?string $name = null): CreateAction
     {
         return CreateAction::make('create')
             ->model($model ?? AmbulanceShift::class)
@@ -216,8 +271,8 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 Checkbox::make('is_reserve')
                     ->label('Solicitar como Reserva')
-                    ->helperText(fn($get) => $get('must_be_reserve') ? 'El día está completo. Solo puedes solicitar reserva.' : 'Marca esta casilla si deseas ser reserva.')
-                    ->disabled(fn($get) => $get('must_be_reserve'))
+                    ->helperText(fn ($get) => $get('must_be_reserve') ? 'El día está completo. Solo puedes solicitar reserva.' : 'Marca esta casilla si deseas ser reserva.')
+                    ->disabled(fn ($get) => $get('must_be_reserve'))
                     ->dehydrated()
                     ->default(false),
 
@@ -242,6 +297,7 @@ class ShiftCalendarWidget extends CalendarWidget
                         ->body('Ya tienes una solicitud o turno asignado para este día.')
                         ->danger()
                         ->send();
+
                     return;
                 }
 
@@ -264,6 +320,7 @@ class ShiftCalendarWidget extends CalendarWidget
                         ->body("Has alcanzado tu límite de {$user->monthly_shift_limit} solicitudes/turnos para este mes.")
                         ->danger()
                         ->send();
+
                     return;
                 }
 

@@ -2,11 +2,13 @@
 
 namespace App\Filament\Pages\Auth;
 
-use Filament\Forms\Components\TextInput;
+use App\Models\User;
+use App\Notifications\NewUserRegisteredNotification;
 use Filament\Auth\Pages\Register as BaseRegister;
-
-use Filament\Schemas\Components\Form;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Model;
 
 class Register extends BaseRegister
 {
@@ -26,5 +28,32 @@ class Register extends BaseRegister
                 $this->getPasswordFormComponent(),
                 $this->getPasswordConfirmationFormComponent(),
             ]);
+    }
+
+    protected function handleRegistration(array $data): Model
+    {
+        $data['role'] = 'nurse';
+        $data['is_active'] = false;
+
+        return User::create($data);
+    }
+
+    protected function afterRegister(): void
+    {
+        $user = $this->getUser();
+
+        Notification::make()
+            ->title('Registro completado')
+            ->body('Tu cuenta está pendiente de aprobación. Te notificaremos cuando sea activada.')
+            ->success()
+            ->send();
+
+        $superusers = User::whereIn('role', ['admin', 'gestor'])
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($superusers as $superuser) {
+            $superuser->notify(new NewUserRegisteredNotification($user));
+        }
     }
 }

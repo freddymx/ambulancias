@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\AmbulanceShifts\Tables;
 
+use App\Enums\ShiftStatus;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -41,6 +43,24 @@ class AmbulanceShiftsTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('approve')
+                    ->label('Aprobar')
+                    ->icon('heroicon-o-check')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->status === ShiftStatus::Pending)
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update(['status' => ShiftStatus::Accepted]);
+                    }),
+                Action::make('reject')
+                    ->label('Rechazar')
+                    ->icon('heroicon-o-x-mark')
+                    ->color('danger')
+                    ->visible(fn ($record) => $record->status === ShiftStatus::Pending)
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update(['status' => ShiftStatus::Rejected]);
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
