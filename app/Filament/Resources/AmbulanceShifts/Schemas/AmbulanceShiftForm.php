@@ -5,7 +5,6 @@ namespace App\Filament\Resources\AmbulanceShifts\Schemas;
 use App\Enums\ShiftStatus;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class AmbulanceShiftForm
@@ -21,9 +20,6 @@ class AmbulanceShiftForm
                 DatePicker::make('date')
                     ->required()
                     ->label(__('app.shifts.date')),
-                Toggle::make('is_reserve')
-                    ->required()
-                    ->label(__('app.shifts.is_reserve')),
                 Select::make('status')
                     ->options(ShiftStatus::class)
                     ->required()

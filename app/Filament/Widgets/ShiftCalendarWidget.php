@@ -5,9 +5,6 @@ namespace App\Filament\Widgets;
 use App\Enums\ShiftStatus;
 use App\Models\AmbulanceShift;
 use Carbon\Carbon;
-use Filament\Actions\DeleteAction;
-use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Guava\Calendar\Filament\Actions\CreateAction;
 use Guava\Calendar\Filament\Actions\EditAction;
@@ -30,13 +27,11 @@ class ShiftCalendarWidget extends CalendarWidget
 
     public function onDateClick(DateClickInfo $info): void
     {
-        // Check if user already has a shift on this date
         $existingShift = AmbulanceShift::where('user_id', Auth::id())
             ->where('date', $info->date->toDateString())
             ->first();
 
         if ($existingShift) {
-            // If shift exists, open edit modal
             $this->mountAction('edit', [
                 'record' => $existingShift,
             ]);
@@ -56,7 +51,6 @@ class ShiftCalendarWidget extends CalendarWidget
         $user = Auth::user();
         $isAdminOrGestor = in_array($user->role ?? '', ['admin', 'gestor']);
 
-        // Allow admin/gestor to edit any shift, or user to edit their own
         if ($record instanceof AmbulanceShift && ($isAdminOrGestor || $record->user_id === Auth::id())) {
             $this->mountAction('edit', [
                 'record' => $record,
@@ -65,131 +59,88 @@ class ShiftCalendarWidget extends CalendarWidget
             return;
         }
 
-        // Fallback to default behavior
         parent::onEventClick($info, $record, $action);
     }
 
-    public function editAction(): EditAction
+    public function editAction(): \Guava\Calendar\Filament\Actions\EditAction
     {
-        return EditAction::make()
-            ->model(AmbulanceShift::class)
+        return EditAction::make('editShift')
+            ->recordTitle(fn ($record) => $record->user->name.' - '.$record->date)
+            ->fillForm(fn (AmbulanceShift $record) => [
+                'date' => $record->date,
+                'status' => $record->status->value,
+            ])
+            ->action(function (array $data, AmbulanceShift $record) {
+                $user = Auth::user();
+                $isAdminOrGestor = in_array($user->role ?? '', ['admin', 'gestor']);
+
+                if (! $isAdminOrGestor) {
+                    Notification::make()
+                        ->title(__('app.shifts.error'))
+                        ->body(__('No tienes permiso para editar turnos.'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                try {
+                    $statusValue = $data['status'];
+
+                    if ($statusValue instanceof ShiftStatus) {
+                        $newStatus = $statusValue;
+                    } else {
+                        $newStatus = ShiftStatus::from($statusValue);
+                    }
+
+                    $date = $record->date->toDateString();
+
+                    $conflictingShift = AmbulanceShift::where('date', $date)
+                        ->where('status', $newStatus)
+                        ->where('id', '!=', $record->id)
+                        ->first();
+
+                    if ($conflictingShift) {
+                        $type = $newStatus === ShiftStatus::EnReserva ? 'reserva' : 'aceptado';
+                        Notification::make()
+                            ->title(__('app.shifts.error'))
+                            ->body(__("Ya existe un turno $type para esta fecha."))
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    $record->status = $newStatus;
+                    $record->save();
+
+                    Notification::make()
+                        ->title(__('app.shifts.updated'))
+                        ->success()
+                        ->send();
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    Notification::make()
+                        ->title(__('app.shifts.error'))
+                        ->body($e->validator->errors()->first())
+                        ->danger()
+                        ->send();
+                }
+            })
             ->form(function ($record) {
                 $user = Auth::user();
-                $isAdminOrGestor = in_array($user->role, ['admin', 'gestor']);
+                $isAdminOrGestor = in_array($user->role ?? '', ['admin', 'gestor']);
 
                 return [
-                    DatePicker::make('date')
+                    \Filament\Forms\Components\DatePicker::make('date')
                         ->label(__('app.shifts.date'))
                         ->required()
-                        ->readOnly(),
-                    Checkbox::make('is_reserve')
-                        ->label(__('app.shifts.reserve'))
-                        ->disabled(! $isAdminOrGestor)
-                        ->dehydrated($isAdminOrGestor),
+                        ->disabled(),
                     \Filament\Forms\Components\Select::make('status')
                         ->label(__('app.shifts.status'))
                         ->options(ShiftStatus::class)
                         ->required()
-                        ->disabled(! $isAdminOrGestor)
-                        ->dehydrated($isAdminOrGestor),
+                        ->disabled(! $isAdminOrGestor),
                 ];
-            })
-            ->modalFooterActions(function (EditAction $action) {
-                $record = $action->getRecord();
-                $user = Auth::user();
-
-                if (! $record || ! $user) {
-                    return [$action->getModalCancelAction()];
-                }
-
-                $isAdminOrGestor = in_array($user->role, ['admin', 'gestor']);
-
-                // User can delete their own pending/rejected shifts
-                $canDelete = $record && $record->user_id === $user->id &&
-                    in_array($record->status, [ShiftStatus::Pending, ShiftStatus::Rejected]);
-
-                // Admins/Gestors can delete any shift
-                if ($isAdminOrGestor) {
-                    $canDelete = true;
-                }
-
-                $actions = [];
-
-                // Approve and Reject buttons for Admin/Gestor (only for Pending shifts)
-                if ($isAdminOrGestor && $record->status === ShiftStatus::Pending) {
-                    $actions[] = \Filament\Actions\Action::make('approve')
-                        ->label(__('app.shifts.approve'))
-                        ->color('success')
-                        ->icon('heroicon-o-check-circle')
-                        ->requiresConfirmation()
-                        ->action(function () use ($record) {
-                            $record->update(['status' => ShiftStatus::Accepted]);
-                            $this->refreshRecords();
-
-                            Notification::make()
-                                ->title(__('app.shifts.approved'))
-                                ->success()
-                                ->send();
-                        })
-                        ->after(function () use ($action) {
-                            $action->cancel();
-                        });
-
-                    $actions[] = \Filament\Actions\Action::make('reject')
-                        ->label(__('app.shifts.reject'))
-                        ->color('danger')
-                        ->icon('heroicon-o-x-circle')
-                        ->requiresConfirmation()
-                        ->action(function () use ($record) {
-                            $record->update(['status' => ShiftStatus::Rejected]);
-                            $this->refreshRecords();
-
-                            Notification::make()
-                                ->title(__('app.shifts.rejected'))
-                                ->success()
-                                ->send();
-                        })
-                        ->after(function () use ($action) {
-                            $action->cancel();
-                        });
-                }
-
-                if ($canDelete) {
-                    $actions[] = DeleteAction::make('delete')
-                        ->requiresConfirmation()
-                        ->action(function () use ($action) {
-                            $action->getRecord()->delete();
-
-                            Notification::make()
-                                ->title(__('app.shifts.removed'))
-                                ->success()
-                                ->send();
-
-                            $this->refreshRecords();
-                            $action->cancel();
-                        });
-                }
-
-                // If admin/gestor, add standard save button
-                if ($isAdminOrGestor) {
-                    $actions[] = \Filament\Actions\Action::make('save')
-                        ->label(__('app.shifts.save'))
-                        ->color('primary')
-                        ->action(function (array $data) use ($action) {
-                            $action->getRecord()->update($data);
-                            $this->refreshRecords();
-                            $action->cancel();
-
-                            Notification::make()
-                                ->title(__('app.shifts.updated'))
-                                ->success()
-                                ->send();
-                        });
-                }
-
-                $actions[] = $action->getModalCancelAction();
-
-                return $actions;
             });
     }
 
@@ -204,32 +155,22 @@ class ShiftCalendarWidget extends CalendarWidget
                 $name = $shift->user->name;
 
                 $title = $name;
-                if ($shift->is_reserve) {
+                if ($shift->status === ShiftStatus::EnReserva) {
                     $title .= ' (Reserva)';
                 }
 
-                // Status indicator in title if not accepted
                 if ($shift->status !== ShiftStatus::Accepted) {
                     $title .= ' ['.$shift->status->getLabel().']';
                 }
 
                 $color = match ($shift->status) {
-                    ShiftStatus::Accepted => match (true) {
-                        $shift->is_reserve => '#f59e0b',  // Amber for reserve
-                        $isMe => '#0ea5e9',               // Sky blue for me
-                        default => '#10b981',              // Emerald green for others
-                    },
-                    ShiftStatus::Pending => '#8b5cf6',      // Violet for pending
-                    ShiftStatus::Rejected => '#ef4444',    // Red for rejected
-                    default => '#8b5cf6',
+                    ShiftStatus::Accepted => $isMe ? '#0ea5e9' : '#10b981',
+                    ShiftStatus::EnReserva => '#f59e0b',
+                    ShiftStatus::Pending => '#8b5cf6',
+                    ShiftStatus::Rejected => '#ef4444',
                 };
 
-                $textColor = match ($shift->status) {
-                    ShiftStatus::Accepted => '#ffffff',
-                    ShiftStatus::Pending => '#ffffff',
-                    ShiftStatus::Rejected => '#ffffff',
-                    default => '#ffffff',
-                };
+                $textColor = '#ffffff';
 
                 return CalendarEvent::make($shift)
                     ->title($title)
@@ -247,51 +188,62 @@ class ShiftCalendarWidget extends CalendarWidget
             ->mountUsing(function ($form, array $arguments) {
                 $date = Carbon::parse($arguments['start'] ?? now());
 
-                // Check current shifts on this day
-                $shiftsCount = AmbulanceShift::where('date', $date->toDateString())
+                $hasRegular = AmbulanceShift::where('date', $date->toDateString())
                     ->where('status', ShiftStatus::Accepted)
-                    ->where('is_reserve', false)
-                    ->count();
+                    ->exists();
 
-                $maxPerDay = 2; // Hardcoded for now
-                $mustBeReserve = $shiftsCount >= $maxPerDay;
+                $hasReserve = AmbulanceShift::where('date', $date->toDateString())
+                    ->where('status', ShiftStatus::EnReserva)
+                    ->exists();
 
                 $form->fill([
                     'date' => $date->toDateString(),
                     'user_id' => Auth::id(),
-                    'is_reserve' => $mustBeReserve,
-                    'must_be_reserve' => $mustBeReserve, // Helper field
+                    'status' => ShiftStatus::Pending,
+                    '_has_regular' => $hasRegular,
+                    '_has_reserve' => $hasReserve,
                 ]);
             })
             ->form([
-                DatePicker::make('date')
+                \Filament\Forms\Components\DatePicker::make('date')
                     ->label(__('app.shifts.date'))
                     ->required()
                     ->readOnly(),
 
-                Checkbox::make('is_reserve')
-                    ->label(__('app.shifts.request_as_reserve'))
-                    ->helperText(fn ($get) => $get('must_be_reserve') ? __('app.shifts.day_full') : __('app.shifts.check_reserve'))
-                    ->disabled(fn ($get) => $get('must_be_reserve'))
-                    ->dehydrated()
-                    ->default(false),
+                \Filament\Forms\Components\Select::make('status')
+                    ->label(__('app.shifts.status'))
+                    ->options(function ($get) {
+                        $options = [];
 
-                // Hidden field to store the logic result
-                Checkbox::make('must_be_reserve')
-                    ->hidden()
-                    ->dehydrated(false),
+                        if (! $get('_has_regular')) {
+                            $options[ShiftStatus::Accepted->value] = ShiftStatus::Accepted->getLabel();
+                        }
+
+                        if (! $get('_has_reserve')) {
+                            $options[ShiftStatus::EnReserva->value] = ShiftStatus::EnReserva->getLabel();
+                        }
+
+                        if (! $get('_has_regular') || ! $get('_has_reserve')) {
+                            $options[ShiftStatus::Pending->value] = ShiftStatus::Pending->getLabel();
+                        }
+
+                        return $options;
+                    })
+                    ->required()
+                    ->default(ShiftStatus::Pending),
+
+                \Filament\Forms\Components\Hidden::make('_has_regular'),
+                \Filament\Forms\Components\Hidden::make('_has_reserve'),
             ])
             ->action(function (array $data) {
                 $user = Auth::user();
                 $date = Carbon::parse($data['date']);
+                $status = ShiftStatus::from($data['status']);
 
-                // 1. Check if user already has a shift on this day (pending or accepted)
                 if (AmbulanceShift::where('user_id', $user->id)
                     ->where('date', $date->toDateString())
-                    ->whereIn('status', [ShiftStatus::Pending, ShiftStatus::Accepted])
                     ->exists()
                 ) {
-
                     Notification::make()
                         ->title(__('app.shifts.error'))
                         ->body(__('app.shifts.already_assigned'))
@@ -301,17 +253,11 @@ class ShiftCalendarWidget extends CalendarWidget
                     return;
                 }
 
-                // 2. Check monthly limit (only count Accepted and Pending?)
-                // Requirement: "El personal tiene un límite global... El personal no puede superar este límite."
-                // Usually this applies to assigned shifts. But maybe pending counts towards "potential"?
-                // Let's count Accepted + Pending to be safe, or just Accepted.
-                // If we only count Accepted, user might spam requests.
-                // Let's count both for now to prevent spamming.
                 $monthStart = $date->copy()->startOfMonth();
                 $monthEnd = $date->copy()->endOfMonth();
                 $shiftsThisMonth = AmbulanceShift::where('user_id', $user->id)
                     ->whereBetween('date', [$monthStart, $monthEnd])
-                    ->whereIn('status', [ShiftStatus::Pending, ShiftStatus::Accepted])
+                    ->whereIn('status', [ShiftStatus::Pending, ShiftStatus::Accepted, ShiftStatus::EnReserva])
                     ->count();
 
                 if ($user->monthly_shift_limit && $shiftsThisMonth >= $user->monthly_shift_limit) {
@@ -324,18 +270,25 @@ class ShiftCalendarWidget extends CalendarWidget
                     return;
                 }
 
-                AmbulanceShift::create([
-                    'user_id' => $user->id,
-                    'date' => $data['date'],
-                    'is_reserve' => $data['is_reserve'],
-                    'status' => ShiftStatus::Pending,
-                ]);
+                try {
+                    AmbulanceShift::create([
+                        'user_id' => $user->id,
+                        'date' => $data['date'],
+                        'status' => $status,
+                    ]);
 
-                Notification::make()
-                    ->title(__('app.shifts.sent'))
-                    ->body(__('app.shifts.pending_approval'))
-                    ->success()
-                    ->send();
+                    Notification::make()
+                        ->title(__('app.shifts.sent'))
+                        ->body(__('app.shifts.pending_approval'))
+                        ->success()
+                        ->send();
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    Notification::make()
+                        ->title(__('app.shifts.error'))
+                        ->body($e->validator->errors()->first())
+                        ->danger()
+                        ->send();
+                }
             });
     }
 }
