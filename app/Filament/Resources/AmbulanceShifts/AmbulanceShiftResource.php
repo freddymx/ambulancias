@@ -20,7 +20,9 @@ class AmbulanceShiftResource extends Resource
 {
     protected static ?string $model = AmbulanceShift::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
+
+    protected static ?string $navigationLabel = 'Turnos';
 
     public static function form(Schema $schema): Schema
     {

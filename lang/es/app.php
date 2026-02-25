@@ -14,7 +14,7 @@ return [
         ],
     ],
     'users' => [
-        'label' => 'Usuarios',
+        'label' => 'Empleados',
         'dni' => 'DNI',
         'email' => 'Correo electrónico',
         'active' => 'Activo',

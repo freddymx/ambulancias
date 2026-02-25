@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Notifications\UserActivatedNotification;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -63,6 +64,7 @@ class UsersTable
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update(['is_active' => true]);
+                        $record->notify(new UserActivatedNotification(auth()->user()?->name ?? 'Admin'));
                     }),
                 Action::make('deactivate')
                     ->label(__('app.users.deactivate'))

@@ -1,125 +1,336 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 
 @theme {
-    --font-sans: 'Outfit', sans-serif;
+    --font-sans: 'DM Sans', sans-serif;
 }
 
-/* Custom Typography & UI Enhancements */
+:root {
+    --color-brand-500: #0ea5e9;
+    --color-brand-600: #0284c7;
+}
+
 body {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ========== SIDEBAR ========== */
+.fi-sidebar {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.dark .fi-sidebar {
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+    border-right-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 .fi-sidebar-header {
-    @apply border-b border-gray-200 dark:border-gray-800;
+    padding: 1.25rem 1.5rem !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
 }
 
-.fi-sidebar-nav-groups {
-    @apply gap-y-2;
+.fi-sidebar-brand {
+    font-weight: 800;
+    letter-spacing: -0.03em;
 }
 
 .fi-sidebar-item-button {
-    @apply rounded-lg transition-colors duration-200;
+    margin: 2px 8px !important;
+    padding: 0.625rem 1rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
 }
 
-.fi-header-heading {
-    @apply font-bold tracking-tight;
+.fi-sidebar-item-button:hover {
+    background: rgba(14, 165, 233, 0.08) !important;
 }
 
+.fi-sidebar-item-active {
+    background: linear-gradient(90deg, #0ea5e9 0%, #0284c7 100%) !important;
+}
+
+/* ========== HEADER / TOPBAR ========== */
+.fi-topbar {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+.dark .fi-topbar {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ========== BUTTONS ========== */
 .fi-btn {
-    @apply font-medium tracking-wide shadow-sm hover:shadow-md transition-all duration-200;
+    font-weight: 600;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
 }
 
-.fi-card {
-    @apply shadow-lg border border-gray-100 dark:border-gray-800 rounded-xl;
-}
-
-/* Calendar Container & Header */
-.fc-toolbar {
-    padding: 1rem 0;
-    margin-bottom: 0.5rem !important;
-}
-
-.fc-toolbar-title {
-    color: #111827 !important;
-    font-weight: 700 !important;
-    font-size: 1.5rem !important;
-    letter-spacing: -0.025em;
-}
-
-.fc .fc-button {
-    font-weight: 500;
-    text-transform: capitalize;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    transition: all 0.15s ease;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-}
-
-.fc .fc-button:hover {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+.fi-btn:hover {
     transform: translateY(-1px);
 }
 
-.fc .fc-button-primary {
-    background-color: #0ea5e9 !important;
+.fi-btn-color-primary {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+    border: none !important;
+}
+
+.fi-btn-color-primary:hover {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+}
+
+/* ========== CARDS ========== */
+.fi-card {
+    border-radius: 12px !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.3s ease !important;
+}
+
+.fi-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-2px);
+}
+
+.dark .fi-card {
+    background: rgba(30, 41, 59, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fi-card-header {
+    padding: 1.25rem 1.5rem 0 !important;
+}
+
+.fi-card-title {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.fi-card-content {
+    padding: 1.25rem 1.5rem !important;
+}
+
+/* ========== FORMS ========== */
+.fi-input {
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+    transition: all 0.2s ease !important;
+}
+
+.dark .fi-input {
+    background: rgba(17, 24, 39, 0.6) !important;
+    border-color: #334155 !important;
+}
+
+.fi-input:focus {
     border-color: #0ea5e9 !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
 }
 
-.fc .fc-button-primary:hover {
-    background-color: #0284c7 !important;
-    border-color: #0284c7 !important;
+.fi-input-label {
+    font-weight: 600 !important;
+    color: #334155 !important;
+    font-size: 0.875rem;
 }
 
-.fc .fc-button-primary:not(:disabled).fc-button-active,
-.fc .fc-button-primary:not(:disabled):active {
-    background-color: #075985 !important;
-    border-color: #075985 !important;
+.dark .fi-input-label {
+    color: #cbd5e1 !important;
 }
 
-.fc .fc-button-secondary {
-    background-color: #f3f4f6 !important;
-    border-color: #d1d5db !important;
-    color: #374151 !important;
+/* ========== SELECT ========== */
+.fi-select-trigger {
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
 }
 
-.fc .fc-button-secondary:hover {
-    background-color: #e5e7eb !important;
+.dark .fi-select-trigger {
+    background: rgba(17, 24, 39, 0.6) !important;
+    border-color: #334155 !important;
 }
 
-/* Calendar Grid */
-.fc-theme-standard .fc-scrollgrid {
-    border-radius: 0.75rem;
+.fi-select-trigger:focus-within {
+    border-color: #0ea5e9 !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+}
+
+/* ========== TABLES ========== */
+.fi-ta {
+    border-radius: 12px !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
     overflow: hidden;
-    border: 1px solid #e5e7eb;
+}
+
+.dark .fi-ta {
+    background: rgba(30, 41, 59, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fi-ta-header {
+    background: linear-gradient(to bottom, #f8fafc, #f1f5f9) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.dark .fi-ta-header {
+    background: linear-gradient(to bottom, rgba(30, 41, 59, 0.9), rgba(30, 41, 59, 0.7)) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fi-ta-header-cell-label {
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.08em;
+    color: #64748b !important;
+}
+
+.dark .fi-ta-header-cell-label {
+    color: #94a3b8 !important;
+}
+
+.fi-ta-row:hover {
+    background: rgba(14, 165, 233, 0.04) !important;
+}
+
+.dark .fi-ta-row:hover {
+    background: rgba(14, 165, 233, 0.06) !important;
+}
+
+.fi-ta-cell {
+    color: #334155 !important;
+}
+
+.dark .fi-ta-cell {
+    color: #cbd5e1 !important;
+}
+
+/* ========== PAGINATION ========== */
+.fi-pagination-item-active {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+    color: white !important;
+}
+
+/* ========== BADGES ========== */
+.fi-badge {
+    border-radius: 9999px !important;
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+/* ========== DROPDOWNS ========== */
+.fi-dropdown-list {
+    border-radius: 10px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.dark .fi-dropdown-list {
+    background: rgba(30, 41, 59, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.fi-dropdown-list-item:hover {
+    background: rgba(14, 165, 233, 0.1) !important;
+}
+
+/* ========== MODALS ========== */
+.fi-modal-window {
+    border-radius: 16px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.fi-modal-header {
+    background: linear-gradient(to right, #f8fafc, #f1f5f9) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.dark .fi-modal-header {
+    background: linear-gradient(to right, rgba(30, 41, 59, 0.9), rgba(30, 41, 59, 0.7)) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fi-modal-title {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* ========== TABS ========== */
+.fi-tabs {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border-radius: 10px !important;
+    padding: 4px !important;
+}
+
+.dark .fi-tabs {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.fi-tab-active {
+    background: white !important;
+    color: #0ea5e9 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .fi-tab-active {
+    background: rgba(14, 165, 233, 0.2) !important;
+    color: #38bdf8 !important;
+}
+
+/* ========== CALENDAR ========== */
+.fc-toolbar-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.fc .fc-button {
+    font-weight: 600;
+    border-radius: 8px !important;
+}
+
+.fc .fc-button-primary {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+    border: none !important;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+    border-radius: 12px;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.dark .fc-theme-standard .fc-scrollgrid {
+    border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .fc-col-header-cell {
-    background-color: #f8fafc;
-    padding: 0.75rem 0;
+    background: linear-gradient(to bottom, #f8fafc, #f1f5f9) !important;
+    padding: 0.875rem 0;
+}
+
+.dark .fc-col-header-cell {
+    background: linear-gradient(to bottom, rgba(30, 41, 59, 0.8), rgba(30, 41, 59, 0.6)) !important;
 }
 
 .fc-col-header-cell-cushion {
-    color: #4b5563 !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     text-transform: uppercase;
     font-size: 0.7rem !important;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
+    color: #64748b !important;
 }
 
-.fc-daygrid-day:hover {
-    background-color: #f8fafc;
-}
-
-.fc-day-today {
-    background-color: #e0f2fe !important;
+.dark .fc-col-header-cell-cushion {
+    color: #94a3b8 !important;
 }
 
 .fc-day-today .fc-daygrid-day-number {
-    background-color: #0ea5e9 !important;
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
     color: white !important;
     border-radius: 50%;
     width: 2rem !important;
@@ -128,43 +339,26 @@ body {
     align-items: center;
     justify-content: center;
     margin: 0.25rem auto;
-    font-weight: 600;
+    font-weight: 700;
 }
 
-.fc-day-sat,
-.fc-day-sun {
-    background-color: #fafafa;
-}
-
-/* Events */
 .fc-event {
-    border-radius: 0.375rem;
-    padding: 2px 6px;
+    border-radius: 6px !important;
+    font-weight: 600;
     font-size: 0.75rem;
-    font-weight: 500;
-    border: none;
-    margin: 1px 2px;
-    transition: all 0.15s ease;
-    cursor: pointer;
+    border: none !important;
 }
 
 .fc-event:hover {
     transform: scale(1.02);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 10;
 }
 
-/* More Link */
 .fc-daygrid-more-link {
     color: #0ea5e9 !important;
     font-weight: 600;
 }
 
-.fc-daygrid-more-link:hover {
-    color: #0284c7 !important;
-}
-
-/* Calendar Height */
 [data-calendar] {
     height: auto !important;
     min-height: 550px;
@@ -175,8 +369,43 @@ body {
     min-height: 550px;
 }
 
-/* Event Preview */
-.ec-event.ec-preview,
-.ec-now-indicator {
-    z-index: 30;
+/* ========== AUTH PAGES ========== */
+.fi-auth-card {
+    border-radius: 16px !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .fi-auth-card {
+    background: rgba(30, 41, 59, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.fi-auth-heading {
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+/* ========== EMPTY STATES ========== */
+.fi-empty-state {
+    padding: 3rem 1.5rem;
+}
+
+/* ========== PAGE HEADING ========== */
+.fi-page-heading {
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+.dark .fi-page-heading {
+    color: #f1f5f9;
+}
+
+/* ========== LINKS ========== */
+.fi-link {
+    color: #0ea5e9;
+    font-weight: 600;
+}
+
+.fi-link:hover {
+    color: #0284c7;
 }

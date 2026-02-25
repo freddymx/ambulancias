@@ -16,4 +16,9 @@ class ListAmbulanceShifts extends ListRecords
             CreateAction::make(),
         ];
     }
+
+    public function getTitle(): string
+    {
+        return __('app.shifts.label');
+    }
 }

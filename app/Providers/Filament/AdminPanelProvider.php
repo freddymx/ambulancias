@@ -11,7 +11,6 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -28,13 +27,29 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->darkMode(false)
+            ->brandLogo(asset('images/logo.png')) //(fn () => view('filament.logo'))
+            ->brandLogoHeight('2.5rem')
             ->login(Login::class)
             ->registration(Register::class)
+            ->profile()
             ->topNavigation()
+            ->sidebarCollapsibleOnDesktop()
+            ->maxContentWidth(\Filament\Support\Enums\Width::Full)
             ->colors([
-                'primary' => Color::hex('#003366'),
-                'secondary' => Color::hex('#0077CC'),
-                'warning' => Color::hex('#FFCC00'),
+                'primary' => [
+                    50 => '#f0f9ff',
+                    100 => '#e0f2fe',
+                    200 => '#bae6fd',
+                    300 => '#7dd3fc',
+                    400 => '#38bdf8',
+                    500 => '#0ea5e9',
+                    600 => '#0284c7',
+                    700 => '#0369a1',
+                    800 => '#075985',
+                    900 => '#0c4a6e',
+                    950 => '#082f49',
+                ],
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

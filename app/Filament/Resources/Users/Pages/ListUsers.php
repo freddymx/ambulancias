@@ -16,4 +16,9 @@ class ListUsers extends ListRecords
             CreateAction::make(),
         ];
     }
+
+    public function getTitle(): string
+    {
+        return __('app.users.label');
+    }
 }
