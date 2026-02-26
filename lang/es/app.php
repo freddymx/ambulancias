@@ -61,6 +61,12 @@ return [
         'pending_approval' => 'Tu solicitud ha sido registrada y está pendiente de aprobación.',
         'day_full' => 'El día está completo. Solo puedes solicitar reserva.',
         'check_reserve' => 'Marca esta casilla si deseas ser reserva.',
+        'manage_shift' => 'Gestionar Turno',
+        'shift_on_date' => 'Turno del :date',
+        'current_status' => 'Estado actual: :status',
+        'cancel_request' => 'Cancelar Solicitud',
+        'shift_cancelled' => 'Turno cancelado',
+        'close' => 'Cerrar',
     ],
     'notifications' => [
         'new_user_title' => 'Nueva solicitud de registro',

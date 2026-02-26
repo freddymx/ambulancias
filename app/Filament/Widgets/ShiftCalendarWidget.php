@@ -25,6 +25,8 @@ class ShiftCalendarWidget extends CalendarWidget
 
     protected bool $eventClickEnabled = true;
 
+    protected ?string $locale = 'es';
+
     public function onDateClick(DateClickInfo $info): void
     {
         $user = Auth::user();
@@ -96,27 +98,27 @@ class ShiftCalendarWidget extends CalendarWidget
     public function cancelShiftAction(): \Filament\Actions\Action
     {
         return \Filament\Actions\Action::make('cancelShift')
-            ->label(__('Gestionar Turno'))
-            ->modalHeading(fn(array $arguments) => __('Turno del :date', ['date' => $arguments['date']]))
-            ->modalDescription(fn(array $arguments) => __('Estado actual: :status', ['status' => $arguments['status_label']]))
+            ->label(__('app.shifts.manage_shift'))
+            ->modalHeading(fn(array $arguments) => __('app.shifts.shift_on_date', ['date' => $arguments['date']]))
+            ->modalDescription(fn(array $arguments) => __('app.shifts.current_status', ['status' => $arguments['status_label']]))
             ->modalSubmitAction(false)
             ->modalCancelAction(false)
-            ->modalActions(fn(array $arguments) => [
+            ->modalFooterActions(fn(array $arguments) => [
                 \Filament\Actions\Action::make('confirm_cancel')
-                    ->label(__('Cancelar Turno'))
+                    ->label(__('app.shifts.cancel_request'))
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(function () use ($arguments) {
                         AmbulanceShift::destroy($arguments['record_id']);
                         Notification::make()
-                            ->title(__('Turno cancelado'))
+                            ->title(__('app.shifts.shift_cancelled'))
                             ->success()
                             ->send();
                         $this->refreshRecords();
                         $this->unmountAction();
                     }),
                 \Filament\Actions\Action::make('close')
-                    ->label(__('Cerrar'))
+                    ->label(__('app.shifts.close'))
                     ->color('gray')
                     ->close(),
             ]);
@@ -129,7 +131,7 @@ class ShiftCalendarWidget extends CalendarWidget
             ->modalHeading(fn($arguments) => __('Solicitud para el :date', ['date' => $arguments['date']]))
             ->modalSubmitAction(false)
             ->modalCancelAction(false)
-            ->modalActions(function (array $arguments) {
+            ->modalFooterActions(function (array $arguments) {
                 $date = $arguments['date'];
                 $hasRegular = AmbulanceShift::where('date', $date)
                     ->where('status', ShiftStatus::Accepted)
@@ -315,7 +317,7 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 $title = $name;
                 if ($shift->status === ShiftStatus::EnReserva) {
-                    $title .= ' (Reserva)';
+                    $title .= ' ';
                 }
 
                 if ($shift->status !== ShiftStatus::Accepted) {
@@ -335,6 +337,7 @@ class ShiftCalendarWidget extends CalendarWidget
                     ->title($title)
                     ->start($shift->date)
                     ->end($shift->date)
+                    ->allDay(true)
                     ->backgroundColor($color)
                     ->textColor($textColor);
             });

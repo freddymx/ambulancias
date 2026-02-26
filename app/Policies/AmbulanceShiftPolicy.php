@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\AmbulanceShift;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class AmbulanceShiftPolicy
 {
@@ -24,6 +23,7 @@ class AmbulanceShiftPolicy
         if (in_array($user->role, ['admin', 'gestor'])) {
             return true;
         }
+
         return $user->id === $ambulanceShift->user_id;
     }
 
@@ -51,7 +51,7 @@ class AmbulanceShiftPolicy
         if (in_array($user->role, ['admin', 'gestor'])) {
             return true;
         }
-        
+
         // Users can only delete their own pending or rejected shifts
         return $user->id === $ambulanceShift->user_id && in_array($ambulanceShift->status, [\App\Enums\ShiftStatus::Pending, \App\Enums\ShiftStatus::Rejected]);
     }

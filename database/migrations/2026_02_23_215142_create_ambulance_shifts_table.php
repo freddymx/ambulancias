@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('date');
             $table->boolean('is_reserve')->default(false);
             $table->timestamps();
-            
+
             // Ensure a user can only have one record per date (either shift or reserve)
             // Wait, "The personnel will be able to put themselves as a reserve if a day has already been selected by another personnel"
             // If they are reserve, it's still a record for that day.

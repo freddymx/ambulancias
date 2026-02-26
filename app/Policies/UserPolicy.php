@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
@@ -23,7 +22,7 @@ class UserPolicy
         if ($user->role === 'admin') {
             return true;
         }
-        
+
         if ($user->role === 'gestor') {
             // Gestor can only view nurses
             return $model->role === 'nurse';

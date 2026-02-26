@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\Register;
 use Filament\Http\Middleware\Authenticate;
@@ -28,13 +29,15 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->darkMode(false)
-            ->brandLogo(asset('images/logo.png')) //(fn () => view('filament.logo'))
+            ->brandLogo(asset('images/logo.png')) // (fn () => view('filament.logo'))
             ->brandLogoHeight('2.5rem')
             ->login(Login::class)
             ->registration(Register::class)
-            ->profile()
+            ->profile(EditProfile::class)
+            ->simpleProfilePage(false)
             ->topNavigation()
             ->sidebarCollapsibleOnDesktop()
+            ->spa()
             ->maxContentWidth(\Filament\Support\Enums\Width::Full)
             ->colors([
                 'primary' => [

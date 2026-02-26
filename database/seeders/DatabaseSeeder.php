@@ -44,7 +44,7 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
             'monthly_shift_limit' => 12,
         ]);
-        
+
         // Create some random nurses
         User::factory(5)->create([
             'role' => 'nurse',
