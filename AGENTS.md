@@ -1,5 +1,4 @@
 <laravel-boost-guidelines>
-
 === foundation rules ===
 
 # Laravel Boost Guidelines
@@ -30,109 +29,6 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 - `pest-testing` — Tests applications using the Pest 4 PHP framework. Activates when writing tests, creating unit or feature tests, adding assertions, testing Livewire components, browser testing, debugging test failures, working with datasets or mocking; or when the user mentions test, spec, TDD, expects, assertion, coverage, or needs to verify functionality works.
 - `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
-
-## Commands
-
-### Running Tests
-
-- **Run all tests**: `php artisan test --compact`
-- **Run a single test**: `php artisan test --compact --filter=TestName`
-- **Run tests matching pattern**: `php artisan test --compact --filter="/pattern/i"`
-- **Run tests in specific file**: `./vendor/bin/pest tests/Feature/SomeTest.php`
-- **Run tests with coverage**: `XDEBUG_MODE=coverage ./vendor/bin/pest --coverage`
-- **Run only failed tests**: `./vendor/bin/pest --failed`
-
-### Code Formatting (Pint)
-
-- **Format all PHP files**: `vendor/bin/pint`
-- **Format specific file**: `vendor/bin/pint app/Models/User.php`
-- **Check formatting without fixing**: `vendor/bin/pint --test`
-- **Format with agent mode (recommended)**: `vendor/bin/pint --dirty --format agent`
-
-### Frontend Build
-
-- **Build assets for production**: `npm run build`
-- **Run dev server with hot reload**: `npm run dev`
-- **Clear Vite cache and rebuild**: `npm run build && php artisan config:clear`
-
-### Laravel Artisan
-
-- **Clear all caches**: `php artisan optimize:clear`
-- **Clear config cache**: `php artisan config:clear`
-- **Clear route cache**: `php artisan route:clear`
-- **List all routes**: `php artisan route:list`
-- **Run migrations**: `php artisan migrate`
-- **Rollback last migration**: `php artisan migrate:rollback`
-- **Seed database**: `php artisan db:seed`
-
-## Code Style Guidelines
-
-### Imports
-
-- Use absolute class imports with `use` statements at the top of files
-- Group imports: PHP built-in first, then packages, then app code
-- Sort imports alphabetically within groups
-- Use aliased imports when names conflict: `use Illuminate\Support\Facades\DB as IlluminateDB;`
-- Never use fully qualified class names in code; always import via `use` statements
-
-### Formatting
-
-- Use 4 spaces for indentation (no tabs)
-- Maximum line length: 120 characters
-- Add trailing commas in multi-line arrays and function calls
-- Use parentheses for method chaining on new lines
-- Use blank lines to separate logical code blocks
-- One blank line between `use` groups and class definition
-
-### Naming Conventions
-
-- **Classes**: PascalCase (e.g., `UserService`, `AmbulanceRequest`)
-- **Methods/variables**: camelCase (e.g., `getActiveAmbulances`, `$requestData`)
-- **Constants**: UPPER_SNAKE_CASE (e.g., `STATUS_PENDING`)
-- **Enums**: TitleCase keys (e.g., `Pending`, `InProgress`)
-- **Tables/columns**: snake_case (e.g., `ambulance_requests`, `created_at`)
-- **Routes**: kebab-case for URL slugs (e.g., `/ambulance-requests`)
-- **Filenames**: Match class name (e.g., `UserService.php`)
-
-### Type Declarations
-
-- Always use explicit return types on methods and functions
-- Use PHP 8+ union types when appropriate (e.g., `int|float`)
-- Use nullable types with `?` prefix (e.g., `?string`)
-- Use typed properties: `public string $name;`
-- Prefer `mixed` over untyped parameters when truly needed
-
-### Error Handling
-
-- Use try-catch blocks for operations that may fail
-- Throw specific exceptions with meaningful messages
-- Use Laravel's exception handling: throw `ValidationException` for validation errors
-- Log errors using Laravel's `Log` facade with appropriate levels
-- Return JSON responses with consistent structure for API errors
-- Never expose sensitive information in error messages
-
-### Database & Eloquent
-
-- Use Eloquent relationships with proper return type hints
-- Always use eager loading (`with()`) to prevent N+1 queries
-- Use scopes for reusable query conditions
-- Prefer model mutations over direct attribute assignment when logic is needed
-- Use migration files for schema changes, never modify schema directly
-- Add indexes for foreign keys and frequently queried columns
-
-### Controllers
-
-- Keep controllers thin; delegate logic to services/jobs
-- Use Form Request classes for validation
-- Return consistent response types (Resource or JSON)
-
-### General Best Practices
-
-- Use early returns to avoid nested conditionals
-- Extract complex conditions into descriptive variables
-- Avoid magic numbers; use constants or config values
-- Keep functions small (under 30 lines when possible)
-- Use traits for reusable behavior across classes
 
 ## Conventions
 
@@ -178,8 +74,8 @@ This project has domain-specific skills available. You MUST activate the relevan
 ## Tinker / Debugging
 
 - You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
-- Use `database-query` tool when you only need to read from the database.
-- Use `database-schema` tool to inspect table structure before writing migrations or models.
+- Use the `database-query` tool when you only need to read from the database.
+- Use the `database-schema` tool to inspect table structure before writing migrations or models.
 
 ## Reading Browser Logs With the `browser-logs` Tool
 
@@ -244,6 +140,13 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 - The application is served by Laravel Herd and will be available at: `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs for the user.
 - You must not run any commands to make the site available via HTTP(S). It is always available through Laravel Herd.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
 
 === laravel/core rules ===
 
