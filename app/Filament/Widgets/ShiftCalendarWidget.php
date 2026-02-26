@@ -326,8 +326,8 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 $color = match ($shift->status) {
                     ShiftStatus::Accepted => $isMe ? '#0ea5e9' : '#10b981',
-                    ShiftStatus::EnReserva => '#f59e0b',
-                    ShiftStatus::Pending => '#8b5cf6',
+                    ShiftStatus::EnReserva => '#f5c20bff',
+                    ShiftStatus::Pending => '#d8ceefff',
                     ShiftStatus::Rejected => '#ef4444',
                 };
 

@@ -31,7 +31,7 @@ class UsersTable
                     ->toggleable(),
                 TextColumn::make('role')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'admin' => 'danger',
                         'gestor' => 'warning',
                         'nurse' => 'info',
@@ -41,7 +41,7 @@ class UsersTable
                 IconColumn::make('is_active')
                     ->boolean()
                     ->label(__('app.users.active'))
-                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
+                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
                 TextColumn::make('monthly_shift_limit')
                     ->numeric()
                     ->sortable()
@@ -54,13 +54,13 @@ class UsersTable
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 Action::make('activate')
                     ->label(__('app.users.activate'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn ($record) => ! $record->is_active)
+                    ->visible(fn($record) => ! $record->is_active)
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update(['is_active' => true]);
@@ -70,13 +70,13 @@ class UsersTable
                     ->label(__('app.users.deactivate'))
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn ($record) => $record->is_active && $record->role !== 'admin')
+                    ->visible(fn($record) => $record->is_active && $record->role !== 'admin')
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $record->update(['is_active' => false]);
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

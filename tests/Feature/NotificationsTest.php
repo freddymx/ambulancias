@@ -2,7 +2,7 @@
 
 use App\Models\AmbulanceShift;
 use App\Models\User;
-use App\Notifications\AmbulanceShiftStatusChanged;
+use App\Notifications\AmbulanceShiftUpdated;
 use App\Notifications\NewUserRegisteredNotification;
 use App\Notifications\UserActivatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,23 +45,56 @@ it('sends new user registered notification to admin', function () {
     );
 });
 
-it('sends ambulance shift status changed notification', function () {
-    $user = User::factory()->create();
+it('sends ambulance shift update notification to user and admin', function () {
+    // Create admin and user
+    $admin = User::factory()->create(['role' => 'admin']);
+    $user = User::factory()->create(['role' => 'nurse']);
+
+    // Create shift
     $shift = AmbulanceShift::factory()->create([
         'user_id' => $user->id,
+        'status' => 'pending',
+        'date' => now()->addDay(),
     ]);
 
-    $user->notify(new AmbulanceShiftStatusChanged($shift->date->format('Y-m-d'), $shift->status->value));
+    // Update shift
+    $shift->update(['status' => 'accepted']);
 
+    // Assert notification sent to user
     Notification::assertSentTo(
         $user,
-        AmbulanceShiftStatusChanged::class,
-        function ($notification) use ($user) {
-            $mail = $notification->toMail($user);
-
-            expect($mail->subject)->toBe('Estado de tu turno de ambulancia');
-
-            return true;
+        AmbulanceShiftUpdated::class,
+        function ($notification, $channels) use ($shift) {
+            return in_array('mail', $channels) &&
+                in_array('database', $channels) &&
+                $notification->shift->id === $shift->id;
         }
     );
+
+    // Assert notification sent to admin
+    Notification::assertSentTo(
+        $admin,
+        AmbulanceShiftUpdated::class,
+        function ($notification, $channels) use ($shift) {
+            return $notification->shift->id === $shift->id;
+        }
+    );
+});
+
+it('does not send duplicate notification if user is admin', function () {
+    // Create admin who is also the shift owner
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    // Create shift
+    $shift = AmbulanceShift::factory()->create([
+        'user_id' => $admin->id,
+        'status' => 'pending',
+    ]);
+
+    // Update shift
+    $shift->update(['status' => 'accepted']);
+
+    // Assert notification sent only once
+    $notifications = Notification::sent($admin, AmbulanceShiftUpdated::class);
+    expect($notifications)->toHaveCount(1);
 });
