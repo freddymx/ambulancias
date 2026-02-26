@@ -113,7 +113,7 @@ class ShiftCalendarWidget extends CalendarWidget
                             ->success()
                             ->send();
                         $this->refreshRecords();
-                        $this->dismountAction();
+                        $this->unmountAction();
                     }),
                 \Filament\Actions\Action::make('close')
                     ->label(__('Cerrar'))
@@ -140,13 +140,13 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 return [
                     \Filament\Actions\Action::make('create_pending')
-                        ->label(__('Crear Turno (Pendiente)'))
+                        ->label(__('Solicitar Turno'))
                         ->color('primary')
                         ->disabled($hasRegular)
                         ->action(function () use ($date) {
                             $this->processShiftCreation($date, ShiftStatus::Pending);
                             $this->refreshRecords();
-                            $this->dismountAction();
+                            $this->unmountAction();
                         }),
                     \Filament\Actions\Action::make('create_reserve')
                         ->label(__('Ponerse en Reserva'))
@@ -155,7 +155,7 @@ class ShiftCalendarWidget extends CalendarWidget
                         ->action(function () use ($date) {
                             $this->processShiftCreation($date, ShiftStatus::EnReserva);
                             $this->refreshRecords();
-                            $this->dismountAction();
+                            $this->unmountAction();
                         }),
                     \Filament\Actions\Action::make('close')
                         ->label(__('Cerrar'))
