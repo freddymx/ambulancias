@@ -38,6 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->topNavigation()
             ->sidebarCollapsibleOnDesktop()
             ->spa()
+            ->databaseNotifications()
             ->maxContentWidth(\Filament\Support\Enums\Width::Full)
             ->colors([
                 'primary' => [
