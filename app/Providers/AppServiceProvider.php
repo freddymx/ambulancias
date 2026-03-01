@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureTrustedProxies();
+        $this->configureCookies();
 
         AmbulanceShift::observe(AmbulanceShiftObserver::class);
 
@@ -33,9 +34,18 @@ class AppServiceProvider extends ServiceProvider
     private function configureTrustedProxies(): void
     {
         Request::setTrustedProxies(
-            explode(',', env('TRUSTED_PROXIES', '*')),
+            ['*'],
             Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO | Request::HEADER_X_FORWARDED_AWS_ELB
         );
+    }
+
+    private function configureCookies(): void
+    {
+        if (env('APP_ENV') === 'production') {
+            config(['session.domain' => '.laravel.cloud']);
+            config(['session.secure' => true]);
+            config(['session.same_site' => 'lax']);
+        }
     }
 
     private function ensureAdminUserExists(): void
