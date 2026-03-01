@@ -15,69 +15,92 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Super Admin
-        User::factory()->create([
-            'name' => 'Alfredo Pineda',
-            'email' => 'info@alfredopineda.es',
-            'password' => 'password',
-            'role' => 'admin',
-            'is_active' => true,
-        ]);
+        // Super Admin - solo crear si no existe
+        if (! User::where('email', 'info@alfredopineda.es')->exists()) {
+            User::factory()->create([
+                'name' => 'Alfredo Pineda',
+                'email' => 'info@alfredopineda.es',
+                'password' => 'password',
+                'role' => 'admin',
+                'is_active' => true,
+            ]);
+        }
 
         $this->call([
             GestorSeeder::class,
         ]);
 
-        // Sample Nurses
-        $nurse1 = User::factory()->create([
-            'name' => 'Nurse One',
-            'email' => 'nurse1@example.com',
-            'role' => 'nurse',
-            'is_active' => true,
-            'monthly_shift_limit' => 10,
-        ]);
+        // Sample Nurses - solo crear si no existen
+        $nurse1 = User::firstOrCreate(
+            ['email' => 'nurse1@example.com'],
+            [
+                'name' => 'Nurse One',
+                'role' => 'nurse',
+                'is_active' => true,
+                'monthly_shift_limit' => 10,
+                'password' => 'password',
+            ]
+        );
 
-        $nurse2 = User::factory()->create([
-            'name' => 'Nurse Two',
-            'email' => 'nurse2@example.com',
-            'role' => 'nurse',
-            'is_active' => true,
-            'monthly_shift_limit' => 12,
-        ]);
+        $nurse2 = User::firstOrCreate(
+            ['email' => 'nurse2@example.com'],
+            [
+                'name' => 'Nurse Two',
+                'role' => 'nurse',
+                'is_active' => true,
+                'monthly_shift_limit' => 12,
+                'password' => 'password',
+            ]
+        );
 
-        // Create some random nurses
+        // Create some random nurses (solo si no existen)
         $randomNurses = User::factory(5)->create([
             'role' => 'nurse',
             'is_active' => true,
             'monthly_shift_limit' => 8,
-        ]);
+        ])->each(function ($nurse) {
+            if (\App\Models\AmbulanceShift::where('user_id', $nurse->id)->count() === 0) {
+                \App\Models\AmbulanceShift::factory(rand(1, 3))->create([
+                    'user_id' => $nurse->id,
+                    'status' => fake()->randomElement(\App\Enums\ShiftStatus::cases()),
+                ]);
+            }
+        });
 
-        // Shifts for Nurse One
-        \App\Models\AmbulanceShift::factory()->count(3)->create([
-            'user_id' => $nurse1->id,
-            'status' => \App\Enums\ShiftStatus::Pending,
-        ]);
-        \App\Models\AmbulanceShift::factory()->count(2)->create([
-            'user_id' => $nurse1->id,
-            'status' => \App\Enums\ShiftStatus::Accepted,
-        ]);
+        // Shifts for Nurse One (solo crear si no existen turnos)
+        if (\App\Models\AmbulanceShift::where('user_id', $nurse1->id)->count() === 0) {
+            $dates = ['2026-03-10', '2026-03-12', '2026-03-15', '2026-03-18', '2026-03-20'];
+            foreach (array_slice($dates, 0, 3) as $index => $date) {
+                \App\Models\AmbulanceShift::firstOrCreate(
+                    ['user_id' => $nurse1->id, 'date' => $date],
+                    ['status' => \App\Enums\ShiftStatus::Pending]
+                );
+            }
+            foreach (array_slice($dates, 3) as $date) {
+                \App\Models\AmbulanceShift::firstOrCreate(
+                    ['user_id' => $nurse1->id, 'date' => $date],
+                    ['status' => \App\Enums\ShiftStatus::Accepted]
+                );
+            }
+        }
 
         // Shifts for Nurse Two
-        \App\Models\AmbulanceShift::factory()->count(2)->create([
-            'user_id' => $nurse2->id,
-            'status' => \App\Enums\ShiftStatus::Rejected,
-        ]);
-        \App\Models\AmbulanceShift::factory()->count(2)->create([
-            'user_id' => $nurse2->id,
-            'status' => \App\Enums\ShiftStatus::EnReserva,
-        ]);
-
-        // Random shifts for other nurses
-        foreach ($randomNurses as $nurse) {
-            \App\Models\AmbulanceShift::factory()->count(rand(1, 3))->create([
-                'user_id' => $nurse->id,
-                'status' => fake()->randomElement(\App\Enums\ShiftStatus::cases()),
-            ]);
+        if (\App\Models\AmbulanceShift::where('user_id', $nurse2->id)->count() === 0) {
+            $dates = ['2026-03-11', '2026-03-13', '2026-03-17', '2026-03-19', '2026-03-21'];
+            foreach (array_slice($dates, 0, 2) as $date) {
+                \App\Models\AmbulanceShift::firstOrCreate(
+                    ['user_id' => $nurse2->id, 'date' => $date],
+                    ['status' => \App\Enums\ShiftStatus::Rejected]
+                );
+            }
+            foreach (array_slice($dates, 2) as $date) {
+                \App\Models\AmbulanceShift::firstOrCreate(
+                    ['user_id' => $nurse2->id, 'date' => $date],
+                    ['status' => \App\Enums\ShiftStatus::EnReserva]
+                );
+            }
         }
+
+        // Random shifts for other nurses (ya verificado en el each de arriba)
     }
 }

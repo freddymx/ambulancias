@@ -28,6 +28,20 @@ class User extends Authenticatable
         'dni',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'name' => 'string',
+        'email' => 'string',
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_active' => 'boolean',
+        'monthly_shift_limit' => 'integer',
+    ];
+
     public function shifts()
     {
         return $this->hasMany(AmbulanceShift::class);

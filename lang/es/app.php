@@ -67,6 +67,8 @@ return [
         'cancel_request' => 'Cancelar Solicitud',
         'shift_cancelled' => 'Turno cancelado',
         'close' => 'Cerrar',
+        'assigned_shift' => 'Turno asignado',
+        'reserve_shift' => 'Turno en reserva',
     ],
     'notifications' => [
         'new_user_title' => 'Nueva solicitud de registro',

@@ -99,11 +99,11 @@ class ShiftCalendarWidget extends CalendarWidget
     {
         return \Filament\Actions\Action::make('cancelShift')
             ->label(__('app.shifts.manage_shift'))
-            ->modalHeading(fn(array $arguments) => __('app.shifts.shift_on_date', ['date' => $arguments['date']]))
-            ->modalDescription(fn(array $arguments) => __('app.shifts.current_status', ['status' => $arguments['status_label']]))
+            ->modalHeading(fn (array $arguments) => __('app.shifts.shift_on_date', ['date' => $arguments['date']]))
+            ->modalDescription(fn (array $arguments) => __('app.shifts.current_status', ['status' => $arguments['status_label']]))
             ->modalSubmitAction(false)
             ->modalCancelAction(false)
-            ->modalFooterActions(fn(array $arguments) => [
+            ->modalFooterActions(fn (array $arguments) => [
                 \Filament\Actions\Action::make('confirm_cancel')
                     ->label(__('app.shifts.cancel_request'))
                     ->color('danger')
@@ -128,7 +128,7 @@ class ShiftCalendarWidget extends CalendarWidget
     {
         return \Filament\Actions\Action::make('requestShift')
             ->label(__('Solicitar Turno'))
-            ->modalHeading(fn($arguments) => __('Solicitud para el :date', ['date' => $arguments['date']]))
+            ->modalHeading(fn ($arguments) => __('Solicitud para el :date', ['date' => $arguments['date']]))
             ->modalSubmitAction(false)
             ->modalCancelAction(false)
             ->modalFooterActions(function (array $arguments) {
@@ -171,11 +171,13 @@ class ShiftCalendarWidget extends CalendarWidget
     {
         $user = Auth::user();
         $date = Carbon::parse($dateString);
+        $dateStringNormalized = $date->toDateString();
 
-        if (AmbulanceShift::where('user_id', $user->id)
-            ->where('date', $date->toDateString())
-            ->exists()
-        ) {
+        $existingShift = AmbulanceShift::where('user_id', $user->id)
+            ->whereDate('date', $dateStringNormalized)
+            ->first();
+
+        if ($existingShift) {
             Notification::make()
                 ->title(__('app.shifts.error'))
                 ->body(__('app.shifts.already_assigned'))
@@ -205,7 +207,7 @@ class ShiftCalendarWidget extends CalendarWidget
         try {
             AmbulanceShift::create([
                 'user_id' => $user->id,
-                'date' => $dateString,
+                'date' => $dateStringNormalized,
                 'status' => $status,
             ]);
 
@@ -226,8 +228,8 @@ class ShiftCalendarWidget extends CalendarWidget
     public function editAction(): \Guava\Calendar\Filament\Actions\EditAction
     {
         return EditAction::make('editShift')
-            ->recordTitle(fn($record) => $record->user->name . ' - ' . $record->date)
-            ->fillForm(fn(AmbulanceShift $record) => [
+            ->recordTitle(fn ($record) => $record->user->name.' - '.$record->date)
+            ->fillForm(fn (AmbulanceShift $record) => [
                 'date' => $record->date,
                 'status' => $record->status->value,
             ])
@@ -307,40 +309,66 @@ class ShiftCalendarWidget extends CalendarWidget
 
     public function getEvents(FetchInfo $fetchInfo): Collection|array
     {
-        return AmbulanceShift::query()
+        $currentUser = Auth::user();
+
+        if (! $currentUser) {
+            return [];
+        }
+
+        $isNurse = ($currentUser->role ?? '') === 'nurse';
+        $isAdminOrGestor = in_array($currentUser->role ?? '', ['admin', 'gestor']);
+
+        $start = $fetchInfo->start instanceof \Carbon\Carbon
+            ? $fetchInfo->start->toDateString()
+            : $fetchInfo->start;
+        $end = $fetchInfo->end instanceof \Carbon\Carbon
+            ? $fetchInfo->end->toDateString()
+            : $fetchInfo->end;
+
+        $shifts = AmbulanceShift::query()
             ->with('user')
-            ->whereBetween('date', [$fetchInfo->start, $fetchInfo->end])
-            ->get()
-            ->map(function (AmbulanceShift $shift) {
-                $isMe = $shift->user_id === Auth::id();
-                $name = $shift->user->name;
+            ->whereBetween('date', [$start, $end])
+            ->get();
 
-                $title = $name;
-                if ($shift->status === ShiftStatus::EnReserva) {
-                    $title .= ' ';
-                }
+        $userId = (int) Auth::id();
 
-                if ($shift->status !== ShiftStatus::Accepted) {
-                    $title .= ' [' . $shift->status->getLabel() . ']';
-                }
+        return $shifts->map(function (AmbulanceShift $shift) use ($isNurse, $isAdminOrGestor, $userId) {
+            $isMe = (int) $shift->user_id === $userId;
 
-                $color = match ($shift->status) {
-                    ShiftStatus::Accepted => $isMe ? '#0ea5e9' : '#10b981',
-                    ShiftStatus::EnReserva => '#f5c20bff',
-                    ShiftStatus::Pending => '#d8ceefff',
-                    ShiftStatus::Rejected => '#ef4444',
-                };
+            if ($isNurse && ! $isAdminOrGestor && ! $isMe) {
+                $title = $shift->status === ShiftStatus::EnReserva
+                    ? __('app.shifts.reserve_shift')
+                    : __('app.shifts.assigned_shift');
+            } else {
+                $title = $shift->user->name;
+            }
 
-                $textColor = '#ffffff';
+            if ($shift->status === ShiftStatus::EnReserva) {
+                $title .= ' ';
+            }
 
-                return CalendarEvent::make($shift)
-                    ->title($title)
-                    ->start($shift->date)
-                    ->end($shift->date)
-                    ->allDay(true)
-                    ->backgroundColor($color)
-                    ->textColor($textColor);
-            });
+            if ($shift->status !== ShiftStatus::Accepted) {
+                $title .= ' ['.$shift->status->getLabel().']';
+            }
+
+            $color = match ($shift->status) {
+                ShiftStatus::Accepted => $isMe ? '#047857' : '#34d399',
+                ShiftStatus::EnReserva => '#f5c20bff',
+                ShiftStatus::Pending => '#d8ceefff',
+                ShiftStatus::Rejected => '#ef4444',
+                default => '#6b7280',
+            };
+
+            $textColor = '#ffffff';
+
+            return CalendarEvent::make($shift)
+                ->title($title)
+                ->start($shift->date)
+                ->end($shift->date)
+                ->allDay(true)
+                ->backgroundColor($color)
+                ->textColor($textColor);
+        });
     }
 
     public function createAction(?string $model = null, ?string $name = null): CreateAction
@@ -372,6 +400,15 @@ class ShiftCalendarWidget extends CalendarWidget
                     ->required()
                     ->readOnly(),
 
+                \Filament\Forms\Components\Select::make('user_id')
+                    ->label(__('app.shifts.nurse'))
+                    ->relationship('user', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->visible(fn () => in_array(Auth::user()->role ?? '', ['admin', 'gestor']))
+                    ->default(Auth::id()),
+
                 \Filament\Forms\Components\Select::make('status')
                     ->label(__('app.shifts.status'))
                     ->options(function ($get) {
@@ -398,11 +435,26 @@ class ShiftCalendarWidget extends CalendarWidget
                 \Filament\Forms\Components\Hidden::make('_has_reserve'),
             ])
             ->action(function (array $data) {
-                $user = Auth::user();
+                $currentUser = Auth::user();
+                $isAdminOrGestor = in_array($currentUser->role ?? '', ['admin', 'gestor']);
+
+                $targetUserId = ($isAdminOrGestor && isset($data['user_id'])) ? $data['user_id'] : $currentUser->id;
+                $targetUser = \App\Models\User::find($targetUserId);
+
+                if (! $targetUser) {
+                    Notification::make()
+                        ->title(__('app.shifts.error'))
+                        ->body(__('Usuario no encontrado'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
                 $date = Carbon::parse($data['date']);
                 $status = ShiftStatus::from($data['status']);
 
-                if (AmbulanceShift::where('user_id', $user->id)
+                if (AmbulanceShift::where('user_id', $targetUser->id)
                     ->where('date', $date->toDateString())
                     ->exists()
                 ) {
@@ -417,15 +469,15 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 $monthStart = $date->copy()->startOfMonth();
                 $monthEnd = $date->copy()->endOfMonth();
-                $shiftsThisMonth = AmbulanceShift::where('user_id', $user->id)
+                $shiftsThisMonth = AmbulanceShift::where('user_id', $targetUser->id)
                     ->whereBetween('date', [$monthStart, $monthEnd])
                     ->whereIn('status', [ShiftStatus::Pending, ShiftStatus::Accepted, ShiftStatus::EnReserva])
                     ->count();
 
-                if ($user->monthly_shift_limit && $shiftsThisMonth >= $user->monthly_shift_limit) {
+                if ($targetUser->monthly_shift_limit && $shiftsThisMonth >= $targetUser->monthly_shift_limit) {
                     Notification::make()
                         ->title(__('app.shifts.monthly_limit_reached'))
-                        ->body(__('app.shifts.monthly_limit_reached', ['limit' => $user->monthly_shift_limit]))
+                        ->body(__('app.shifts.monthly_limit_reached', ['limit' => $targetUser->monthly_shift_limit]))
                         ->danger()
                         ->send();
 
@@ -434,7 +486,7 @@ class ShiftCalendarWidget extends CalendarWidget
 
                 try {
                     AmbulanceShift::create([
-                        'user_id' => $user->id,
+                        'user_id' => $targetUser->id,
                         'date' => $data['date'],
                         'status' => $status,
                     ]);

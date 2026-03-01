@@ -12,6 +12,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Register extends BaseRegister
 {
+    protected ?Model $user = null;
+
+    public function getUser(): ?Model
+    {
+        return $this->user;
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -35,7 +42,9 @@ class Register extends BaseRegister
         $data['role'] = 'nurse';
         $data['is_active'] = false;
 
-        return User::create($data);
+        $this->user = User::create($data);
+
+        return $this->user;
     }
 
     protected function afterRegister(): void

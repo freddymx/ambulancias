@@ -12,11 +12,13 @@ class GestorSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Gestor One',
-            'email' => 'gestor@example.com',
-            'role' => 'gestor',
-            'is_active' => true,
-        ]);
+        if (! User::where('email', 'gestor@example.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Gestor One',
+                'email' => 'gestor@example.com',
+                'role' => 'gestor',
+                'is_active' => true,
+            ]);
+        }
     }
 }
