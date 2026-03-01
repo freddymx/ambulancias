@@ -29,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->darkMode(false)
-            ->brandLogo(asset('images/logo.png')) // (fn () => view('filament.logo'))
+            ->brandLogo(asset('images/logo.png'))
             ->brandLogoHeight('2.5rem')
             ->login(Login::class)
             ->registration(Register::class)
