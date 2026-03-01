@@ -26,26 +26,71 @@ class AmbulanceShiftUpdated extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        $isAffectedUser = $notifiable->id === $this->shift->user_id;
         $url = $notifiable->isAdmin()
             ? url("/admin/ambulance-shifts/{$this->shift->id}")
-            : url("/admin/ambulance-shifts"); // Users might verify via calendar or list
+            : url('/admin/ambulance-shifts');
+
+        $subject = $this->getSubject($isAffectedUser);
+        $body = $this->getBody($isAffectedUser);
 
         return (new MailMessage)
-            ->subject('Actualización de turno')
-            ->line("El turno del usuario {$this->shift->user->name} para el día {$this->shift->date->format('d/m/Y')} ha sido actualizado.")
-            ->line("Estado actual: " . $this->shift->status->value)
+            ->subject($subject)
+            ->line($body)
             ->action('Ver Turno', $url);
+    }
+
+    private function getSubject(bool $isAffectedUser): string
+    {
+        if ($isAffectedUser) {
+            return 'Actualización de tu turno';
+        }
+
+        return 'Actualización de turno';
+    }
+
+    private function getBody(bool $isAffectedUser): string
+    {
+        $date = $this->shift->date->format('d/m/Y');
+        $statusMessage = $this->getStatusMessage();
+
+        if ($isAffectedUser) {
+            return "Hola {$this->shift->user->name}, {$statusMessage}";
+        }
+
+        return "El turno del usuario {$this->shift->user->name} para el día {$date} ha sido actualizado. Estado actual: {$this->shift->status->value}";
+    }
+
+    private function getStatusMessage(): string
+    {
+        $date = $this->shift->date->format('d/m/Y');
+        $status = $this->shift->status;
+
+        if (isset($this->changes['status'])) {
+            return match ($status) {
+                \App\Enums\ShiftStatus::Accepted => "tu turno para el día {$date} ha sido aceptado.",
+                \App\Enums\ShiftStatus::Rejected => "tu turno para el día {$date} ha sido rechazado. Por favor, contacta con nosotros para más información.",
+                \App\Enums\ShiftStatus::EnReserva => "tu turno para el día {$date} está en reserva. Te notificaremos cuando sea confirmado.",
+                \App\Enums\ShiftStatus::Pending => "tu turno para el día {$date} está pendiente de confirmación.",
+            };
+        }
+
+        return "tu turno para el día {$date} ha sido actualizado.";
     }
 
     public function toDatabase(object $notifiable): array
     {
+        $isAffectedUser = $notifiable->id === $this->shift->user_id;
+        $title = $isAffectedUser ? 'Tu turno ha sido actualizado' : 'Turno actualizado';
+        $body = $this->getBody($isAffectedUser);
+
         return FilamentNotification::make()
-            ->title('Turno actualizado')
-            ->body("El turno del usuario {$this->shift->user->name} para el día {$this->shift->date->format('d/m/Y')} ha sido actualizado.")
+            ->title($title)
+            ->body($body)
             ->actions([
                 Action::make('view')
                     ->label('Ver')
-                    ->url($notifiable->isAdmin() ? "/admin/ambulance-shifts/{$this->shift->id}" : "/admin/ambulance-shifts"),
+                    ->url($notifiable->isAdmin() ? "/admin/ambulance-shifts/{$this->shift->id}" : '/admin/ambulance-shifts'),
             ])
             ->getDatabaseMessage();
     }

@@ -59,11 +59,21 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
             'monthly_shift_limit' => 8,
         ])->each(function ($nurse) {
-            if (\App\Models\AmbulanceShift::where('user_id', $nurse->id)->count() === 0) {
-                \App\Models\AmbulanceShift::factory(rand(1, 3))->create([
-                    'user_id' => $nurse->id,
-                    'status' => fake()->randomElement(\App\Enums\ShiftStatus::cases()),
-                ]);
+            $existingDates = \App\Models\AmbulanceShift::where('user_id', $nurse->id)
+                ->pluck('date')
+                ->map(fn ($date) => $date->format('Y-m-d'))
+                ->toArray();
+
+            $shiftCount = rand(1, 3);
+            for ($i = 0; $i < $shiftCount; $i++) {
+                $date = fake()->dateTimeBetween('now', '+1 month')->format('Y-m-d');
+                if (! in_array($date, $existingDates)) {
+                    \App\Models\AmbulanceShift::firstOrCreate(
+                        ['user_id' => $nurse->id, 'date' => $date],
+                        ['status' => fake()->randomElement(\App\Enums\ShiftStatus::cases())]
+                    );
+                    $existingDates[] = $date;
+                }
             }
         });
 
