@@ -13,10 +13,16 @@ test('nurse can view own shifts', function () {
         'role' => 'nurse',
         'is_active' => true,
     ]);
-    
+
     $ownShift = AmbulanceShift::factory()->create([
         'user_id' => $nurse->id,
         'date' => now()->addDay(),
+    ]);
+
+    $acceptedShift = AmbulanceShift::factory()->create([
+        'user_id' => $nurse->id,
+        'date' => now()->addDays(3),
+        'status' => \App\Enums\ShiftStatus::Accepted,
     ]);
 
     $otherNurse = User::factory()->create([
@@ -33,7 +39,7 @@ test('nurse can view own shifts', function () {
 
     Livewire::test(ListNurseShifts::class)
         ->assertSuccessful()
-        ->assertCanSeeTableRecords([$ownShift])
+        ->assertCanSeeTableRecords([$ownShift, $acceptedShift])
         ->assertCanNotSeeTableRecords([$otherShift]);
 });
 
