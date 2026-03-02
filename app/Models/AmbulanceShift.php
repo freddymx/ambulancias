@@ -40,7 +40,7 @@ class AmbulanceShift extends Model
             $date = $shift->date->toDateString();
             $status = $shift->status;
 
-            $exists = self::where('date', $date)
+            $exists = self::whereDate('date', $date)
                 ->where('status', $status)
                 ->exists();
 
@@ -56,7 +56,7 @@ class AmbulanceShift extends Model
             $newStatus = $shift->status;
             $date = $shift->date->toDateString();
 
-            $exists = self::where('date', $date)
+            $exists = self::whereDate('date', $date)
                 ->where('status', $newStatus)
                 ->where('id', '!=', $shift->id)
                 ->exists();

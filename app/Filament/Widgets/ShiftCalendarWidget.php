@@ -327,8 +327,16 @@ class ShiftCalendarWidget extends CalendarWidget
 
         $shifts = AmbulanceShift::query()
             ->with('user')
-            ->whereBetween('date', [$start, $end])
-            ->get();
+            ->whereBetween('date', [$start, $end]);
+
+        if ($isNurse && ! $isAdminOrGestor) {
+            $shifts->where(function ($query) use ($currentUser) {
+                $query->where('user_id', $currentUser->id)
+                    ->orWhere('status', ShiftStatus::Accepted);
+            });
+        }
+
+        $shifts = $shifts->get();
 
         $userId = (int) Auth::id();
 
@@ -336,9 +344,7 @@ class ShiftCalendarWidget extends CalendarWidget
             $isMe = (int) $shift->user_id === $userId;
 
             if ($isNurse && ! $isAdminOrGestor && ! $isMe) {
-                $title = $shift->status === ShiftStatus::EnReserva
-                    ? __('app.shifts.reserve_shift')
-                    : __('app.shifts.assigned_shift');
+                $title = __('app.shifts.assigned_shift');
             } else {
                 $title = $shift->user->name;
             }

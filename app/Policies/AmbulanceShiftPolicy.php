@@ -12,7 +12,7 @@ class AmbulanceShiftPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, ['admin', 'gestor']);
+        return in_array($user->role, ['admin', 'gestor', 'nurse']);
     }
 
     /**

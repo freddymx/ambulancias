@@ -141,7 +141,7 @@ it('nurse can see accepted shifts from other users', function () {
     expect($events)->toHaveCount(1);
 });
 
-it('nurse can see reserve shifts from other users', function () {
+it('nurse cannot see reserve shifts from other users', function () {
     $nurse = User::factory()->create(['role' => 'nurse']);
     $otherNurse = User::factory()->create(['role' => 'nurse']);
     $date = Carbon::parse('2026-10-21');
@@ -167,10 +167,10 @@ it('nurse can see reserve shifts from other users', function () {
     $events = $widget->getEvents($fetchInfoObj);
 
     expect($events)->toBeInstanceOf(\Illuminate\Support\Collection::class);
-    expect($events)->toHaveCount(1);
+    expect($events)->toHaveCount(0);
 });
 
-it('nurse can see all shifts from other users but with limited info', function () {
+it('nurse cannot see pending shifts from other users', function () {
     $nurse = User::factory()->create(['role' => 'nurse']);
     $otherNurse = User::factory()->create(['role' => 'nurse']);
     $date = Carbon::parse('2026-10-22');
@@ -196,8 +196,5 @@ it('nurse can see all shifts from other users but with limited info', function (
     $events = $widget->getEvents($fetchInfoObj);
 
     expect($events)->toBeInstanceOf(\Illuminate\Support\Collection::class);
-    expect($events)->toHaveCount(1);
-
-    $event = $events->first();
-    expect($event->title)->not->toBe($otherNurse->name);
+    expect($events)->toHaveCount(0);
 });

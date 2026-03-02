@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class AmbulanceShiftResource extends Resource
 {
@@ -23,6 +24,11 @@ class AmbulanceShiftResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
     protected static ?string $navigationLabel = 'Turnos';
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->role === 'admin' || Auth::user()->role === 'gestor';
+    }
 
     public static function form(Schema $schema): Schema
     {
